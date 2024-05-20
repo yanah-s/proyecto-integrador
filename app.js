@@ -1,6 +1,8 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors'); 
+const usuarios = require('./routes/usuarios');
+
 
 const dbHost = 'localhost';
 //'3.16.90.77'; 
