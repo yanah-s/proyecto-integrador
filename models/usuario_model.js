@@ -20,11 +20,11 @@ const usuarioSchema = new mongoose.Schema({
     },
     estado: {
         type: Boolean,
-        default: false
+        default: true
     },
     alumno: {
         type: Boolean,
-        default: true
+        default: false
     },
     administrador: {
         type: Boolean,
@@ -41,6 +41,10 @@ const usuarioSchema = new mongoose.Schema({
     },
     observaciones : {
         type: String,
+    },
+    entrevistaPresencial : {
+        type: Boolean,
+        defauls : false
     }
 
 });

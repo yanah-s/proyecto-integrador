@@ -20,7 +20,7 @@ const schema = Joi.object({
 ruta.get('/', async (req, res) => {
     try {
         let usuarios = await listarUsuarios();
-        res.json(usuarios);
+        res.json(usuarios)
     } catch (err) {
         res.status(400).json({ err });
     }
@@ -92,7 +92,15 @@ async function crearUsuario(body){
         email       : body.email,
         nombre      : body.nombre,
         password    : body.password,
-        fNacimiento : body.fNacimiento
+        fNacimiento : body.fNacimiento,
+        estado : body.estado,
+        alumno : body.alumno,
+        administrador : body.administrador,
+        objetivos : body.objetivos ,
+        metas : body.metas,
+        patologias : body.patologias,
+        observaciones : body.observaciones,
+        entrevistaPresencial : body.entrevistaPresencial
     });
     return await usuario.save();
 }
@@ -102,8 +110,14 @@ async function listarUsuarios(){
     return usuarios;
 }
 
+async function listarUsuariosActivos(){
+    let usuarios = await Usuario.find(({estado: true}));
+    return usuarios;
+}
+
 async function actualizarUsuario(email, body){
     let usuario = await Usuario.findOneAndUpdate({"email": email}, {
+        //COMO VAMOS A VALIDAR QUE EL USUARIO DEBE EDITAR CIERTO CAMPO 
         $set: {
             nombre: body.nombre,
             password: body.password
@@ -116,6 +130,16 @@ async function desactivarUsuario(email){
     let usuario = await Usuario.findOneAndUpdate({"email": email}, {
         $set: {
             estado: false
+        }
+    }, {new: true});
+    return usuario;
+}
+
+
+async function activarAlumno (email){
+    let usuario = await Usuario.findOneAndUpdate({"email": email}, {
+        $set: {
+            alumno: true
         }
     }, {new: true});
     return usuario;
