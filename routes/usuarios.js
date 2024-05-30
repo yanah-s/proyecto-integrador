@@ -52,25 +52,24 @@ ruta.post('/', async (req, res) => {
 
 ruta.put('/:email', (req, res) => {
 
-    const {error, value} = schema.validate({nombre: req.body.nombre});
+    const {error, value} = schema.validate({nombre: req.body.nombre, password: req.body.password});
 
-    if(!error){
+    if (!error) {
         let resultado = actualizarUsuario(req.params.email, req.body);
         resultado.then(valor => {
             res.json({
                 valor
-            })
+            });
         }).catch(err => {
             res.status(400).json({
-                err
-            })
+                error: 'Error al actualizar usuario'
+            });
         });
-    }else{
+    } else {
         res.status(400).json({
-            error
-        })
+            error: 'Datos de entrada inválidos'
+        });
     }
-
     
 });
 
@@ -111,16 +110,20 @@ async function listarUsuarios(){
 }
 
 async function listarUsuariosActivos(){
-    let usuarios = await Usuario.find(({estado: true}));
+    let usuarios = await Usuario.
+    
+    
+    find(({estado: true}));
     return usuarios;
 }
 
 async function actualizarUsuario(email, body){
     let usuario = await Usuario.findOneAndUpdate({"email": email}, {
-        //COMO VAMOS A VALIDAR QUE EL USUARIO DEBE EDITAR CIERTO CAMPO 
+
         $set: {
             nombre: body.nombre,
-            password: body.password
+            password: body.password,
+            alumno: body.alumno.value
         }
     }, {new: true});
     return usuario;

@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const bcryptjs = require ('bcryptjs');
 
 const usuarioSchema = new mongoose.Schema({
     email: {
@@ -48,5 +49,18 @@ const usuarioSchema = new mongoose.Schema({
     }
 
 });
+
+usuarioSchema.pre('save', async function (next) {
+    if (this.isModified('password')) {
+        const salt = await bcryptjs.genSalt(10);
+        this.password = await bcryptjs.hash(this.password, salt);
+    }
+    next();
+});
+
+// Método para comparar la contraseña ingresada con la cifrada
+usuarioSchema.methods.compararPassword = function (passwordIngresado) {
+    return bcryptjs.compare(passwordIngresado, this.password);
+};
 
 module.exports = mongoose.model('Usuario', usuarioSchema);
