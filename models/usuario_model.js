@@ -41,10 +41,6 @@ const usuarioSchema = new mongoose.Schema({
     },
     observaciones : {
         type: String,
-    },
-    entrevistaPresencial : {
-        type: Boolean,
-        defauls : false
     }
 
 });
