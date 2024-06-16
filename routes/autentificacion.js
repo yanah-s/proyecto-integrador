@@ -2,39 +2,80 @@ const express = require('express');
 const Usuario = require('../models/usuario_model');
 const jwt = require('jsonwebtoken');
 const ruta = express.Router();
+const config = require('../config/development.json');
 
+
+
+// Ruta de autenticación
 ruta.post('/', async (req, res) => {
     try {
-        let usuario = await buscarUsuario(req.body.email);
+        const { email, password } = req.body;
+
+        // Buscar usuario por email
+        let usuario = await Usuario.findOne({ email });
         if (!usuario) {
-            return res.status(404).json({ mensaje: 'Usuario no encontrado' });
+            return res.status(404).json({ mensaje: 'Usuario o contraseña incorrecta' });
         }
 
-        // Comparar la contraseña ingresada con la cifrada
-        const esPasswordCorrecta = await usuario.compararPassword(req.body.password);
-        if (!esPasswordCorrecta) {
-            return res.status(401).json({ mensaje: 'Contraseña incorrecta' });
+        // Función asincrónica para comparar el código de recuperación
+        async function compararCodigo(codigoIngresado) {
+         
+            if(codigoIngresado === usuario.codigoRecuperacion){
+                return true;
+            }else if(await usuario.compararPassword(password) ){
+               usuario.codigoRecuperacion = "";
+               usuario.save();
+                return true;
+            }
+            return false;
+        }
+
+        let esPasswordCorrecta = false;
+
+        // Comparar el código de recuperación si el usuario tiene
+        if (usuario.codigoRecuperacion !== "") {
+            const esCodigoCorrecto = await compararCodigo(password);
+            console.log(esCodigoCorrecto);
+            if (!esCodigoCorrecto) {
+                return res.status(401).json({ mensaje: 'Usuario o contraseña incorrecta' });
+            }
+        } else {
+            // Comparar la contraseña ingresada
+            esPasswordCorrecta = await usuario.compararPassword(password);
+            if (!esPasswordCorrecta) {
+                return res.status(401).json({ mensaje: 'Usuario o contraseña incorrecta' });
+            }
+        }
+
+        // Si la contraseña es correcta, resetear el código de recuperación
+        if (esPasswordCorrecta) {
+            usuario.codigoRecuperacion = "";
+            await usuario.save();
         }
 
         // Generar un token JWT
         const token = jwt.sign(
-            { id: usuario._id, email: usuario.email , password: usuario.password},
-            'proyecto',
-            { expiresIn: '10h' }
+            { id: usuario._id, email: usuario.email },
+            config.configToken.SEED,
+            { expiresIn: config.configToken.expiration }
         );
-
-        return res.json({ mensaje: 'Autenticación exitosa', token , usuario: {
-            id: usuario.id,
-            email: usuario.email,
-            password: usuario.password
-        }});
+        usuario.token = token;
+        console.log('token generado');
+        console.log(usuario.token);
+        await usuario.save();
+        console.log('token guardado');
+        console.log(usuario.token);
+        return res.json({
+            mensaje: 'Autenticación exitosa',
+            token,
+            usuario: {
+                id: usuario._id,
+                email: usuario.email
+            }
+        });
     } catch (err) {
-        return res.status(500).json({ mensaje: 'Error al buscar el usuario', error: err.message });
+        return res.status(500).json({ mensaje: 'Error de conexión', error: err.message });
     }
 });
-
-async function buscarUsuario(emailIngresado) {
-    return Usuario.findOne({ email: emailIngresado });
-}
 
 module.exports = ruta;

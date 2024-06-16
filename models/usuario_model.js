@@ -31,24 +31,19 @@ const usuarioSchema = new mongoose.Schema({
         type: Boolean,
         default: false       
     },
-    objetivos : {
+
+    codigoRecuperacion: {
         type: String,
-    }, 
-    metas : {
-        type: String,
+        default: ""      
     },
-    patologias : {
+    token: {
         type: String,
-    },
-    observaciones : {
-        type: String,
-    },
-    entrevistaPresencial : {
-        type: Boolean,
-        defauls : false
+        default:""
     }
 
+
 });
+
 
 usuarioSchema.pre('save', async function (next) {
     if (this.isModified('password')) {
@@ -58,9 +53,11 @@ usuarioSchema.pre('save', async function (next) {
     next();
 });
 
-// Método para comparar la contraseña ingresada con la cifrada
 usuarioSchema.methods.compararPassword = function (passwordIngresado) {
     return bcryptjs.compare(passwordIngresado, this.password);
+};
+usuarioSchema.methods.compararCodigo = function (codigoIngresado) {
+    return bcryptjs.compare(codigoIngresado, this.codigoRecuperacion);
 };
 
 module.exports = mongoose.model('Usuario', usuarioSchema);
