@@ -23,6 +23,7 @@ const app = express();
 app.use(express.json());
 app.use(cors());
 app.use(express.urlencoded({extended:true}));
+
 app.use('/api/usuarios', usuarios);
 app.use('/api/agenda', agenda);
 
