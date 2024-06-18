@@ -2,8 +2,7 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors'); 
 const usuarios = require('./routes/usuarios');
-const agendas = require('./routes/agendas');
-const disponibilidad = require('./routes/disponibilidad');
+const agenda = require ('./routes/agendas');
 
 const dbHost = '127.0.0.1';
 //'3.16.90.77'; 
@@ -25,8 +24,7 @@ app.use(express.json());
 app.use(cors());
 app.use(express.urlencoded({extended:true}));
 app.use('/api/usuarios', usuarios);
-app.use('/api/agendas', agendas);
-app.use('/api/disponibilidad', disponibilidad);
+app.use('/api/agenda', agenda);
 
 const port = process.env.PORT || 3000;
 app.listen(port, () => {
