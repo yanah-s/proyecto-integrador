@@ -4,6 +4,7 @@ const cors = require('cors');
 const usuarios = require('./routes/usuarios');
 const agendas = require('./routes/agendas');
 const disponibilidad = require('./routes/disponibilidad');
+const ejercicio = require('./routes/ejercicio');
 
 const dbHost = '127.0.0.1';
 //'3.16.90.77'; 
@@ -27,6 +28,7 @@ app.use(express.urlencoded({extended:true}));
 app.use('/api/usuarios', usuarios);
 app.use('/api/agendas', agendas);
 app.use('/api/disponibilidad', disponibilidad);
+app.use('/api/ejercicio', ejercicio);
 
 const port = process.env.PORT || 3000;
 app.listen(port, () => {
