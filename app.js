@@ -2,15 +2,13 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors'); 
 const usuarios = require('./routes/usuarios');
-<<<<<<< HEAD
-const agenda = require ('./routes/agendas');
+//const agenda = require ('./routes/agendas');
 const autentificacion = require ('./routes/autentificacion')
 const logout = require ('./routes/logout')
-=======
 const agendas = require('./routes/agendas');
 const disponibilidad = require('./routes/disponibilidad');
 const ejercicio = require('./routes/ejercicio');
->>>>>>> origin/ejercicios
+const rutina = require('./routes/rutinas');
 
 const dbHost = '127.0.0.1';
 //'3.16.90.77'; 
@@ -33,10 +31,14 @@ app.use(cors());
 app.use(express.urlencoded({extended:true}));
 
 app.use('/api/usuarios', usuarios);
-app.use('/api/agenda', agenda);
+app.use('/api/agendas', agendas);
+app.use('/api/disponibilidad', disponibilidad);
+app.use('/api/ejercicio', ejercicio);
+app.use('/api/rutinas', rutina);
+// app.use('/api/agenda', agenda);
 app.use('/api/autentificacion' ,autentificacion);
 app.use('/api/logout',logout);
-app.use('/api/ejercicio', ejercicio);
+
 const port = process.env.PORT || 3000;
 app.listen(port, () => {
     console.log(`Api RESTFul Ok, y ejecutándose en el puerto ${port}...`);

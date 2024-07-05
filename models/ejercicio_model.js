@@ -26,6 +26,13 @@ const ejercicioSchema = new mongoose.Schema({
         type: Boolean,
         default: true
     }
+}, {
+    toJSON: {
+        transform: (doc, ret) => {
+            delete ret.__v; // Elimina el campo __v
+            return ret;
+        }
+    }
 });
 
 module.exports = mongoose.model('ejercicio', ejercicioSchema);

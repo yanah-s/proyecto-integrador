@@ -110,6 +110,17 @@ ruta.get('/', async (req, res) => {
     }
 });
 
+ruta.get('/categoria', async (req, res) => {
+    try {
+        const { categoria } = req.query;
+        let ejercicios = await listarEjerciciosPorCategoria(categoria);
+        res.json(ejercicios);
+    } catch (err) {
+        console.error('Error al listar ejercicios por categoría:', err);
+        res.status(400).json({ err });
+    }
+});
+
 ruta.post('/', async (req, res) => {
     let body = req.body;
 
@@ -203,6 +214,17 @@ async function deshabilitarEjercicio(id) {
 
 async function listarEjercicios(){
     let ejercicios = await Ejercicio.find();
+    return ejercicios;
+}
+
+async function listarEjerciciosPorCategoria(categoria) {
+    let query = { disponible: true }; 
+
+    if (categoria) {
+        query.categoria = { $regex: categoria, $options: 'i' }; 
+    }
+
+    let ejercicios = await Ejercicio.find(query);
     return ejercicios;
 }
 
