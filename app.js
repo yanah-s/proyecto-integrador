@@ -3,6 +3,8 @@ const mongoose = require('mongoose');
 const cors = require('cors'); 
 const usuarios = require('./routes/usuarios');
 const agenda = require ('./routes/agendas');
+const autentificacion = require ('./routes/autentificacion')
+const logout = require ('./routes/logout')
 
 const dbHost = '127.0.0.1';
 //'3.16.90.77'; 
@@ -26,9 +28,12 @@ app.use(express.urlencoded({extended:true}));
 
 app.use('/api/usuarios', usuarios);
 app.use('/api/agenda', agenda);
+app.use('/api/autentificacion' ,autentificacion);
+app.use('/api/logout',logout);
 
 const port = process.env.PORT || 3000;
 app.listen(port, () => {
     console.log(`Api RESTFul Ok, y ejecutándose en el puerto ${port}...`);
 });
+
 

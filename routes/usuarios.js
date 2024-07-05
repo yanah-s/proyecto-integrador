@@ -2,24 +2,9 @@ const express = require('express');
 const Usuario = require('../models/usuario_model');
 const Joi = require('@hapi/joi');
 const ruta = express.Router();
-<<<<<<< HEAD
-
-const schema = Joi.object({
-    nombre: Joi.string()
-    .min(3)
-    .max(10)
-    .required(),
-
-    password: Joi.string()
-    .pattern(/^[a-zA-Z0-9]{3,30}$/),
-
-    email: Joi.string()
-    .email({ minDomainSegments: 2, tlds: { allow: ['com', 'net'] } })
-});
-
-=======
 const nodemailer = require('nodemailer');
 const mongoose = require('mongoose');
+const autentificarToken = require ('../middleware/autToken');
 
     // Configurar el transporter 
     const transporter = nodemailer.createTransport({
@@ -109,12 +94,15 @@ const schema = Joi.object({
         password2: Joi.ref('password'), 
         fNacimiento: fechaNacimiento(),
     email: Joi.string()
-        .email({ minDomainSegments: 2, tlds: { allow: ['com', 'net'] } })
+        .email({ minDomainSegments: 2, tlds: { allow: ['com', 'net', '.com'] } })
         .required()
         .messages({
             'string.email': 'El correo electrónico debe ser un correo válido.',
             'any.required': 'El correo electrónico es un campo obligatorio.'
         }),
+        patologias: Joi.string().allow('') // Permitir que patologias sea una cadena vacía
+
+
 });
 
 //verifica edad de los usuairos
@@ -123,7 +111,7 @@ const schema = Joi.object({
     maxDate.setFullYear(maxDate.getFullYear() - 16);
     const minDate = new Date();
     minDate.setFullYear(minDate.getFullYear() - 50);
-  
+
     return Joi.date()
       .max(maxDate.toISOString())
       .iso()
@@ -131,16 +119,19 @@ const schema = Joi.object({
       .required()
       .messages({
         'date.base': 'La fecha de nacimiento debe ser una fecha válida.',
+        'date.format': 'El formato de la fecha de nacimiento es inválido.',
         'date.max': 'Debes tener al menos 16 años de edad.',
         'date.min': 'No debes tener más de 50 años de edad.',
-        'any.required': 'La fecha de nacimiento es un campo obligatorio.'
+        'any.required': 'La fecha de nacimiento es un campo obligatorio.', 
+         'any': 'Error en el campo de fecha de nacimiento.'
       });
-  }
->>>>>>> usuarios
+  };
 
-ruta.get('/', async (req, res) => {
+
+ruta.get('/',autentificarToken, async (req, res) => {
     try {
-        let usuarios = await listarUsuarios();
+        
+        let usuarios = await listarUsuariosActivos();
         res.json(usuarios)
     } catch (err) {
         res.status(400).json({ err });
@@ -148,70 +139,23 @@ ruta.get('/', async (req, res) => {
 });
 
 ruta.post('/', async (req, res) => {
-<<<<<<< HEAD
-    let body = req.body;
-
-    const {error, value} = schema.validate({nombre: body.nombre, email: body.email 
-        , password : body.password});
-    if(!error){
-        let resultado = crearUsuario(body);
-
-        resultado.then( user => {
-            res.json({
-                valor: user
-            })
-        }).catch( err => {
-            res.status(400).json({
-                err
-            })
-        });
-    }else{
-        res.status(400).json({
-            error
-        })
-    }    
-});
-
-ruta.put('/:email', (req, res) => {
-
-    const {error, value} = schema.validate({nombre: req.body.nombre});
-
-    if(!error){
-        let resultado = actualizarUsuario(req.params.email, req.body);
-        resultado.then(valor => {
-            res.json({
-                valor
-            })
-        }).catch(err => {
-            res.status(400).json({
-                err
-            })
-        });
-    }else{
-        res.status(400).json({
-            error
-        })
-    }
-
-    
-=======
     try {
       const { error, value } = schema.validate(req.body, { abortEarly: false });
+      console.log(error);
       if (error) {
         const errorMessages = error.details.map(err => err.message);
         return res.status(400).json({ errors: errorMessages });
       }
-  
       const user = await crearUsuario(req.body);
-  
-      res.json({ valor: user });
+        res.json({ value: user });
+        console.log("este es el usuario creado recien"+ user._id);
     } catch (err) {
       console.error(err);
       res.status(500).json({ message: 'Error interno' });
     }
   });
 
-ruta.put('/:email', (req, res) => {
+ruta.put('/:email',autentificarToken, (req, res) => {
    try{
     let resultado = actualizarPassword(req.params.email, req.body);
     resultado.then(valor => {
@@ -229,11 +173,68 @@ ruta.put('/:email', (req, res) => {
     });
    }
       
->>>>>>> usuarios
 });
 
-ruta.delete('/:email', (req, res) => {
-    let resultado = desactivarUsuario(req.params.email);
+ruta.put('/editarUsuario/:id',autentificarToken, (req, res) => {
+
+    console.log(req.params.id);
+    if (req.isAdmin) {
+    try{
+     let resultado = editarUsuario (req.params.id, req.body);
+     resultado.then(valor => {
+         res.json({
+             valor
+         });
+     }).catch(err => {
+         res.status(400).json({
+             error: 'Error al actualizar usuario'
+         });
+     });
+    }catch{
+     res.status(400).json({
+         error: 'Datos inválidos'
+     });
+    }
+} else {
+    res.status(403).json({ message: 'No tienes permisos de administrador.' });
+}
+
+       
+ });
+ 
+
+ ruta.put('/asignar/:id',autentificarToken, (req, res) => {
+    if (req.isAdmin) {
+    try{
+     let resultado = activarAlumno (req.params.id, req.body);
+     resultado.then(valor => {
+         res.json({
+             valor
+         });
+     }).catch(err => {
+         res.status(400).json({
+             error: 'Error al actualizar usuario'
+         });
+     });
+    }catch{
+     res.status(400).json({
+         error: 'Datos inválidos'
+     });
+    }
+    } else {
+    res.status(403).json({ message: 'No tienes permisos de administrador.' });
+    }
+ });
+
+
+
+ruta.delete('/:id', autentificarToken , (req, res) => {
+    console.log("desactiva usuario" + req.params.id);
+
+    console.log("ES ADMIN" + req.isAdmin);
+
+    if (req.isAdmin) {
+    let resultado = desactivarUsuario(req.params.id);
     resultado.then(valor => {
         res.json({
             usuario: valor
@@ -243,7 +244,11 @@ ruta.delete('/:email', (req, res) => {
             err
         })
     });
+}else {
+    res.status(403).json({ message: 'No tienes permisos de administrador.' });
+}
 });
+
 
 async function crearUsuario(body){
     let usuario = new Usuario({
@@ -253,17 +258,9 @@ async function crearUsuario(body){
         fNacimiento : body.fNacimiento,
         estado : body.estado,
         alumno : body.alumno,
-<<<<<<< HEAD
         administrador : body.administrador,
-        objetivos : body.objetivos ,
-        metas : body.metas,
-        patologias : body.patologias,
-        observaciones : body.observaciones,
-        entrevistaPresencial : body.entrevistaPresencial
-=======
-        administrador : body.administrador
+        patologias : body.patologias
 
->>>>>>> usuarios
     });
     return await usuario.save();
 }
@@ -274,24 +271,7 @@ async function listarUsuarios(){
 }
 
 async function listarUsuariosActivos(){
-<<<<<<< HEAD
-    let usuarios = await Usuario.find(({estado: true}));
-    return usuarios;
-}
-
-async function actualizarUsuario(email, body){
-    let usuario = await Usuario.findOneAndUpdate({"email": email}, {
-        //COMO VAMOS A VALIDAR QUE EL USUARIO DEBE EDITAR CIERTO CAMPO 
-        $set: {
-            nombre: body.nombre,
-            password: body.password
-        }
-    }, {new: true});
-    return usuario;
-=======
     let usuarios = await Usuario.
-    
-    
     find(({estado: true}));
     return usuarios;
 }
@@ -319,29 +299,58 @@ async function actualizarPassword(email, body){
     } catch (err) {
         throw new Error('Error al actualizar el usuario: ' + err.message);
     }
->>>>>>> usuarios
 }
 
-async function desactivarUsuario(email){
-    let usuario = await Usuario.findOneAndUpdate({"email": email}, {
+async function editarUsuario (id, body){
+    console.log(id);
+    try {
+        let usuario = await Usuario.findOne({ "_id": id });
+
+        if (!usuario) {
+            throw new Error('Usuario no encontrado');
+        }
+        
+        else {
+            console.log(usuario);
+            if(body.patologias !== ""){
+                usuario.patologias =body.patologias;
+            }else if(body.observaciones !== "") {
+                usuario.observaciones = body.observaciones;
+            } 
+            
+            await usuario.save();
+            console.log(usuario);
+        }
+       
+        return usuario;
+    } catch (err) {
+        throw new Error('Error al actualizar el usuario: ' + err.message);
+    }
+}
+
+async function desactivarUsuario(id){
+    console.log(id);
+    
+    let usuario = await Usuario.findOneAndUpdate({"_id": id}, {
         $set: {
             estado: false
         }
     }, {new: true});
+    console.log(usuario);
     return usuario;
 }
 
 
-async function activarAlumno (email){
-    let usuario = await Usuario.findOneAndUpdate({"email": email}, {
+async function activarAlumno (id){
+    let usuario = await Usuario.findOneAndUpdate({"_id": id}, {
         $set: {
             alumno: true
         }
     }, {new: true});
     return usuario;
 }
-<<<<<<< HEAD
-=======
+
+
 
 
 const usuarioSchema = new mongoose.Schema({
@@ -363,5 +372,4 @@ usuarioSchema.methods.compararPassword = async function (passwordIngresado) {
 
 
 
->>>>>>> usuarios
 module.exports = ruta;

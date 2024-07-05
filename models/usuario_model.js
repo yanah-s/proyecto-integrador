@@ -39,8 +39,15 @@ const usuarioSchema = new mongoose.Schema({
     token: {
         type: String,
         default:""
+    },
+    patologias: {
+        type: String,
+         default:""
+    },
+    observaciones: {
+        type: String,
+         default:""
     }
-
 
 });
 

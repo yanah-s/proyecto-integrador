@@ -6,11 +6,10 @@ const config = require('../config/development.json');
 
 
 
-// Ruta de autenticación
 ruta.post('/', async (req, res) => {
     try {
         const { email, password } = req.body;
-
+        console.log(email);
         // Buscar usuario por email
         let usuario = await Usuario.findOne({ email });
         if (!usuario) {
@@ -60,17 +59,20 @@ ruta.post('/', async (req, res) => {
             { expiresIn: config.configToken.expiration }
         );
         usuario.token = token;
+        // if(usuario.administrador){
+        //     const administrador = 0;
+        // }
         console.log('token generado');
         console.log(usuario.token);
         await usuario.save();
-        console.log('token guardado');
-        console.log(usuario.token);
+        
         return res.json({
             mensaje: 'Autenticación exitosa',
             token,
             usuario: {
                 id: usuario._id,
-                email: usuario.email
+                email: usuario.email,
+                admin: usuario.administrador
             }
         });
     } catch (err) {
