@@ -5,6 +5,7 @@ const usuarios = require('./routes/usuarios');
 const agendas = require('./routes/agendas');
 const disponibilidad = require('./routes/disponibilidad');
 const ejercicio = require('./routes/ejercicio');
+const rutina = require('./routes/rutinas');
 
 const dbHost = '127.0.0.1';
 //'3.16.90.77'; 
@@ -29,6 +30,7 @@ app.use('/api/usuarios', usuarios);
 app.use('/api/agendas', agendas);
 app.use('/api/disponibilidad', disponibilidad);
 app.use('/api/ejercicio', ejercicio);
+app.use('/api/rutinas', rutina);
 
 const port = process.env.PORT || 3000;
 app.listen(port, () => {
