@@ -43,6 +43,8 @@ const dividirTurnosEnIntervalos = (turno) => {
 
 // Ruta para guardar la agenda
 ruta.post('/', autentificarToken ,async (req, res) => {
+
+  console.log(req.data);
   if (req.isAdmin) {
    
   const { datos } = req.body;
@@ -168,6 +170,7 @@ ruta.delete('/:idTurno', autentificarToken, async (req, res) => {
   if (req.isAdmin) {
       try {
           const idTurno = req.params.idTurno;
+          console.log(idTurno)
           await eliminarTurno(idTurno);
           res.json("Turno eliminado exitosamente");
       } catch (err) {
@@ -196,11 +199,11 @@ async function eliminarTurno(id) {
 
 
 ruta.get('/', async (req, res) => {
- 
+ console.log("en turnos disponibles llega"+ req.data);
   try {
     let turnos = await listarTurnosDisponibles();
-    console.log(turnos);
-    res.json(turnos);
+  //  console.log(turnos);
+     res.json(turnos);
   } catch (err) {
     console.error('Error al obtener los turnos:', err);
     res.status(400).json({ error: 'Error al obtener los turnos' });

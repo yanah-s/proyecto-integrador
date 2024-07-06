@@ -30,7 +30,7 @@ app.use(cors());
 app.use(express.urlencoded({extended:true}));
 
 app.use('/api/usuarios', usuarios);
-app.use('/api/agendas', agendas);
+app.use('/api/agenda', agendas);
 app.use('/api/ejercicio', ejercicio);
 app.use('/api/rutinas', rutina);
 // app.use('/api/agenda', agenda);
