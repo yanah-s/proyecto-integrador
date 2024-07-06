@@ -178,7 +178,6 @@ ruta.put('/:email',autentificarToken, (req, res) => {
 ruta.put('/editarUsuario/:id',autentificarToken, (req, res) => {
 
     console.log(req.params.id);
-    if (req.isAdmin) {
     try{
      let resultado = editarUsuario (req.params.id, req.body);
      resultado.then(valor => {
@@ -195,16 +194,11 @@ ruta.put('/editarUsuario/:id',autentificarToken, (req, res) => {
          error: 'Datos inválidos'
      });
     }
-} else {
-    res.status(403).json({ message: 'No tienes permisos de administrador.' });
-}
-
        
  });
  
 
  ruta.put('/asignar/:id',autentificarToken, (req, res) => {
-    if (req.isAdmin) {
     try{
      let resultado = activarAlumno (req.params.id, req.body);
      resultado.then(valor => {
@@ -221,9 +215,7 @@ ruta.put('/editarUsuario/:id',autentificarToken, (req, res) => {
          error: 'Datos inválidos'
      });
     }
-    } else {
-    res.status(403).json({ message: 'No tienes permisos de administrador.' });
-    }
+
  });
 
 
@@ -232,8 +224,6 @@ ruta.delete('/:id', autentificarToken , (req, res) => {
     console.log("desactiva usuario" + req.params.id);
 
     console.log("ES ADMIN" + req.isAdmin);
-
-    if (req.isAdmin) {
     let resultado = desactivarUsuario(req.params.id);
     resultado.then(valor => {
         res.json({
@@ -244,9 +234,6 @@ ruta.delete('/:id', autentificarToken , (req, res) => {
             err
         })
     });
-}else {
-    res.status(403).json({ message: 'No tienes permisos de administrador.' });
-}
 });
 
 

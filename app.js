@@ -14,7 +14,7 @@ const dbHost = 'localhost';
 const dbPort = '27017'; 
 const dbName = 'mi_base_de_datos'; 
 var servidor = 'local';
-if (dbHost != '127.0.0.1'){
+if (dbHost != 'localhost'){
     servidor = 'aws';
 } 
 const dbURL = `mongodb://${dbHost}:${dbPort}/${dbName}`;

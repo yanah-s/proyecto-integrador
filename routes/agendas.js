@@ -45,7 +45,7 @@ const dividirTurnosEnIntervalos = (turno) => {
 ruta.post('/', autentificarToken ,async (req, res) => {
 
   console.log(req.data);
-  if (req.isAdmin) {
+  // if (req.isAdmin) {
    
   const { datos } = req.body;
 
@@ -91,9 +91,6 @@ ruta.post('/', autentificarToken ,async (req, res) => {
     console.error('Error al guardar en la base de datos:', err);
     res.status(500).json({ error: 'Error al guardar en la base de datos' });
   }
-}else {
-  res.status(403).json({ message: 'No tienes permisos de administrador.' });
-}
 });
 
 ruta.put('/', (req, res) => {
@@ -166,8 +163,7 @@ ruta.get('/turnos',autentificarToken, async (req, res) => {
 
 
 ruta.delete('/:idTurno', autentificarToken, async (req, res) => {
-  console.log(req.isAdmin);
-  if (req.isAdmin) {
+  
       try {
           const idTurno = req.params.idTurno;
           console.log(idTurno)
@@ -177,11 +173,6 @@ ruta.delete('/:idTurno', autentificarToken, async (req, res) => {
           console.error('Error al eliminar el turno:', err.message);
           res.status(400).json({ error: err.message });
       }
-  } else {
-    console.log("sin permisos");
-      res.status(403).json({ message: 'No tienes permisos de administrador.' });
-     
-  }
 });
 
 
