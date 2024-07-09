@@ -3,6 +3,7 @@ const Rutina = require('../models/rutina_model');
 const Ejercicio = require('../models/ejercicio_model');
 const Joi = require('@hapi/joi');
 const ruta = express.Router();
+const autentificarToken = require ('../middleware/autToken');
 
 const ejercicioSchema = Joi.object({
     _id: Joi.string().length(24).required().messages({
@@ -98,7 +99,7 @@ const updateSchema = Joi.object({
 });
 
 
-ruta.get('/', async (req, res) => {
+ruta.get('/', autentificarToken , async (req, res) => {
     try {
         let rutinas = await listarRutinas();
         res.json(rutinas)
@@ -107,7 +108,7 @@ ruta.get('/', async (req, res) => {
     }
 });
 
-ruta.post('/', async (req, res) => {
+ruta.post('/', autentificarToken , async (req, res) => {
     let body = req.body;
 
     const { error, value } = schema.validate({
@@ -133,7 +134,7 @@ ruta.post('/', async (req, res) => {
     }
 });
 
-ruta.put('/:id', async (req, res) => {
+ruta.put('/:id', autentificarToken , async (req, res) => {
     const { id } = req.params;
     const body = req.body;
     const { error, value } = updateSchema.validate({
@@ -163,7 +164,7 @@ ruta.put('/:id', async (req, res) => {
     }
 });
 
-ruta.put('/:id/deshabilitar', async (req, res) => {
+ruta.put('/:id/deshabilitar', autentificarToken ,async (req, res) => {
     const { id } = req.params;
     try {
       const rutinaActualizada = await deshabilitarRutina(id);

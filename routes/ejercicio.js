@@ -2,6 +2,7 @@ const express = require('express');
 const Ejercicio = require('../models/ejercicio_model');
 const Joi = require('@hapi/joi');
 const ruta = express.Router();
+const autentificarToken = require ('../middleware/autToken');
 
 const schema = Joi.object({
     nombre: Joi.string()
@@ -101,7 +102,7 @@ const updateSchema = Joi.object({
 });
 
 
-ruta.get('/', async (req, res) => {
+ruta.get('/', autentificarToken , async (req, res) => {
     try {
         let ejercicios = await listarEjercicios();
         res.json(ejercicios)
@@ -110,7 +111,7 @@ ruta.get('/', async (req, res) => {
     }
 });
 
-ruta.get('/categoria', async (req, res) => {
+ruta.get('/categoria', autentificarToken ,  async (req, res) => {
     try {
         const { categoria } = req.query;
         let ejercicios = await listarEjerciciosPorCategoria(categoria);
@@ -121,7 +122,7 @@ ruta.get('/categoria', async (req, res) => {
     }
 });
 
-ruta.post('/', async (req, res) => {
+ruta.post('/', autentificarToken ,  async (req, res) => {
     let body = req.body;
 
     const { error, value } = schema.validate({
@@ -151,7 +152,7 @@ ruta.post('/', async (req, res) => {
     }
 });
 
-ruta.put('/:id', async (req, res) => {
+ruta.put('/:id', autentificarToken , async (req, res) => {
     const { id } = req.params;
     const body = req.body;
     const { error, value } = updateSchema.validate({
@@ -185,7 +186,7 @@ ruta.put('/:id', async (req, res) => {
     }
 });
 
-ruta.put('/:id/deshabilitar', async (req, res) => {
+ruta.put('/:id/deshabilitar', autentificarToken , async (req, res) => {
     const { id } = req.params;
     try {
       const ejercicioActualizado = await deshabilitarEjercicio(id);

@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const bcryptjs = require ('bcryptjs');
 
 const usuarioSchema = new mongoose.Schema({
     email: {
@@ -30,19 +31,40 @@ const usuarioSchema = new mongoose.Schema({
         type: Boolean,
         default: false       
     },
-    objetivos : {
+
+    codigoRecuperacion: {
         type: String,
-    }, 
-    metas : {
-        type: String,
+        default: ""      
     },
-    patologias : {
+    token: {
         type: String,
+        default:""
     },
-    observaciones : {
+    patologias: {
         type: String,
+         default:""
+    },
+    observaciones: {
+        type: String,
+         default:""
     }
 
 });
+
+
+usuarioSchema.pre('save', async function (next) {
+    if (this.isModified('password')) {
+        const salt = await bcryptjs.genSalt(10);
+        this.password = await bcryptjs.hash(this.password, salt);
+    }
+    next();
+});
+
+usuarioSchema.methods.compararPassword = function (passwordIngresado) {
+    return bcryptjs.compare(passwordIngresado, this.password);
+};
+usuarioSchema.methods.compararCodigo = function (codigoIngresado) {
+    return bcryptjs.compare(codigoIngresado, this.codigoRecuperacion);
+};
 
 module.exports = mongoose.model('Usuario', usuarioSchema);

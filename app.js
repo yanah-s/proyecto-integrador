@@ -2,17 +2,19 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors'); 
 const usuarios = require('./routes/usuarios');
+//const agenda = require ('./routes/agendas');
+const autentificacion = require ('./routes/autentificacion')
+const logout = require ('./routes/logout')
 const agendas = require('./routes/agendas');
-const disponibilidad = require('./routes/disponibilidad');
 const ejercicio = require('./routes/ejercicio');
 const rutina = require('./routes/rutinas');
 
-const dbHost = '127.0.0.1';
+const dbHost = 'localhost';
 //'3.16.90.77'; 
 const dbPort = '27017'; 
 const dbName = 'mi_base_de_datos'; 
 var servidor = 'local';
-if (dbHost != '127.0.0.1'){
+if (dbHost != 'localhost'){
     servidor = 'aws';
 } 
 const dbURL = `mongodb://${dbHost}:${dbPort}/${dbName}`;
@@ -26,14 +28,18 @@ const app = express();
 app.use(express.json());
 app.use(cors());
 app.use(express.urlencoded({extended:true}));
+
 app.use('/api/usuarios', usuarios);
-app.use('/api/agendas', agendas);
-app.use('/api/disponibilidad', disponibilidad);
+app.use('/api/agenda', agendas);
 app.use('/api/ejercicio', ejercicio);
 app.use('/api/rutinas', rutina);
+// app.use('/api/agenda', agenda);
+app.use('/api/autentificacion' ,autentificacion);
+app.use('/api/logout',logout);
 
 const port = process.env.PORT || 3000;
 app.listen(port, () => {
     console.log(`Api RESTFul Ok, y ejecutándose en el puerto ${port}...`);
 });
+
 

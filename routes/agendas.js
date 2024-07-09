@@ -1,124 +1,215 @@
 const express = require('express');
-const Usuario = require('../models/usuario_model');
 const Agenda = require('../models/agenda_model');
-const Disponibilidad = require('../models/disponibilidad_model');
+const Usuario = require('../models/usuario_model');
 const ruta = express.Router();
 const Joi = require('@hapi/joi');
-
-//Validacion de los parametros de la agenda
+const moment = require('moment-timezone');
+const autentificarToken = require ('../middleware/autToken');
+// Validación de los parámetros de la agenda
 const schema = Joi.object({
-  fecha: Joi.date()
-    .iso()
-    .required(),
-  id_usuario: Joi.string()
-    .required()
+  fecha: Joi.date().required(),
+  hora_desde: Joi.date().required(),
+  hora_hasta: Joi.date().required(),
+  id_usuario: Joi.string().allow(null),
 });
 
-//Obtener todas las reservas
-ruta.get('/', async (req, res) => {
-  try {
-      let agendas = await Agenda.find().populate('id_usuario', ['nombre', 'email']);
-      res.json(agendas);
-  } catch (err) {
-      res.status(400).json({ err });
+// // Función para dividir los turnos en intervalos de 30 minutos
+const dividirTurnosEnIntervalos = (turno) => {
+  const { fecha, hora_desde, hora_hasta, id_usuario } = turno;
+  const intervalos = [];
+  let inicio = moment.tz(hora_desde, 'America/Montevideo');
+  const fin = moment.tz(hora_hasta, 'America/Montevideo');
+
+  // console.log("hora inicio" + inicio.format());
+  // console.log("hora fin" + fin.format());
+  while (inicio < fin) {
+    let proximo = moment(inicio).add(30, 'minutes');
+
+    if (proximo > fin) {
+      proximo = moment(hora_hasta);
+    }
+
+    intervalos.push({
+      fecha: moment(fecha),
+      hora_desde: moment(inicio),
+      hora_hasta: moment(proximo),
+      id_usuario
+    });
+
+    inicio = moment(proximo);
   }
-});
+  return intervalos;
+};
 
-//Crear una reserva
-ruta.post('/', async (req, res) => {
-  let {id_usuario, fecha, observacion, presencial} = req.body;
+// Ruta para guardar la agenda
+ruta.post('/', autentificarToken ,async (req, res) => {
+
+  console.log(req.data);
+  // if (req.isAdmin) {
+   
+  const { datos } = req.body;
+
+  console.log("datos recibidos", datos);
 
   try {
-      // Convertir fecha a objeto Date
-      const fechaObj = new Date(fecha);
-      const dia = fechaObj.toISOString().split('T')[0];
-      const hora = fechaObj.toTimeString().split(' ')[0].substring(0, 5);
-  
-      // Verificar disponibilidad
-      const disponibilidad = await Disponibilidad.findOne({ fecha: dia });
-  
-      if (disponibilidad) {
-        const horaMinutos = convertirHoraAMinutos(hora);
-        const desdeMinutos = convertirHoraAMinutos(disponibilidad.hora_desde);
-        const hastaMinutos = convertirHoraAMinutos(disponibilidad.hora_hasta);
-  
-        if (horaMinutos >= desdeMinutos && horaMinutos <= hastaMinutos) {
-          const rangoInicio = new Date(fechaObj);
-          rangoInicio.setHours(rangoInicio.getHours() - 1);
+    const agendaItems = [];
+
+    // Itera sobre los datos recibidos y guarda en la base de datos
+    for (const fecha in datos) {
+      if (datos.hasOwnProperty(fecha)) {
+        const { hora_desde, hora_hasta } = datos[fecha];
+
+        // Dividir los turnos en intervalos
+         const intervalos = dividirTurnosEnIntervalos({
+          fecha: moment(fecha),
+          hora_desde: moment(hora_desde),
+          hora_hasta: moment(hora_hasta),
+          id_usuario: null, 
           
-          const rangoFin = new Date(fechaObj);
-          rangoFin.setHours(rangoFin.getHours() + 1);
-          
-          const agendaExistente = await Agenda.findOne({
-            fecha: {
-              $gte: rangoInicio,
-              $lte: rangoFin
-            }
-          });
+        });
         
-          if (agendaExistente) {
-            return res.status(400).json({ error: 'Ya existe una agenda en el rango de una hora del horario solicitado' });
+        for (const intervalo of intervalos) {
+          console.table(intervalos);
+          try {
+            const intervaloItem = new Agenda(intervalo);
+            await intervaloItem.save();
+
+            agendaItems.push(intervaloItem);
+
+            console.log("agenda intems" + agendaItems);
+          } catch (err) {
+            console.error('Error al guardar disponibiliad en la base de datos:', err);
+            res.status(500).json({ error: 'Error al guardar el intervalo en la base de datos' });
+            return;
           }
-
-          const cita = new Agenda({id_usuario, fecha: fechaObj, observacion, presencial});
-          await cita.save();
-          return res.json(cita);
-        } else {
-          return res.status(400).json({ error: 'Hora no disponible' });
         }
-      } else {
-        return res.status(400).json({ error: 'Día no disponible' });
       }
+    }
+
+    res.status(201).json(agendaItems);
   } catch (err) {
-      console.error(err);
-      res.status(500).json({ error: 'Error interno del servidor' });
+    console.error('Error al guardar en la base de datos:', err);
+    res.status(500).json({ error: 'Error al guardar en la base de datos' });
   }
 });
 
-// Buscar y actualizar el registro de la agenda por ID de usuario
-ruta.put('/:id', async(req, res) => {
+ruta.put('/', (req, res) => {
+ 
+  try{
+    const { usuarioId, turnoId } = req.body; 
+    console.log("este es el ID QUE LLEGA"+ usuarioId);
+   let resultado = agendarUsuario(usuarioId, turnoId);
+   console.log(resultado);
+   resultado.then(valor => {
+       res.json({
+           valor
+       });
+   }).catch(err => {
+       res.status(400).json({
+           error: 'Error al actualizar turno'
+       });
+   });
+  }catch{
+    console.log("este es el req"+ req.object);
+   res.status(400).json({
+       error: 'Datos inválidos'
+   });
+  }
+     
+});
 
+async function agendarUsuario(id_usuario, id_turno){
+  console.log("llega a funcion agendar");
   try {
-      const id_usuario = req.params.id_usuario;
-      const nuevaFecha = req.body.nuevaFecha;
-  
-      const updatedAgenda = await Agenda.findOneAndUpdate({ id_usuario: id_usuario }, { fecha: nuevaFecha }, { new: true });
-  
-      if (!updatedAgenda) {
-        return res.status(404).json({ message: 'Registro no encontrado para el ID de usuario proporcionado.' });
+      let usuario = await Usuario.findById(id_usuario);
+      console.log("usuario encontrado"+usuario);
+      let agenda = await Agenda.findById(id_turno);
+      console.log("agenda encontrado"+agenda);
+      if (!usuario) {
+        console.log("usuario NO encontrado"+id_usuario);
+          throw new Error('Usuario no encontrado');
       }
-  
-      res.json({ message: 'Registro actualizado exitosamente.', updatedAgenda });
-    } catch (error) {
-      console.error('Error al actualizar registro de la agenda:', error);
-      res.status(500).json({ message: 'Error interno del servidor al actualizar el registro.' });
-    }
+      else if(!agenda) {
+        throw new Error('turno no encontrado');
+      }
 
-    
-});
+      agenda.id_usuario = id_usuario;
 
-// Buscar y eliminar el registro de la agenda por ID de usuario
-ruta.delete('/:id', async (req, res) => {
+      await agenda.save();
+
+      return agenda;
+  } catch (err) {
+      throw new Error('Error al agendar usuario: ' + err.message);
+  }
+}
+
+ruta.get('/turnos',autentificarToken, async (req, res) => {
+ 
   try {
-    const userId = req.params.id_usuario;
+    let turnosAgenda = await listarTurnos();
     
-    const deletedAgenda = await Agenda.findOneAndDelete({ id_usuario: id });
-
-    if (!deletedAgenda) {
-      return res.status(404).json({ message: 'Registro no encontrado para el ID de usuario proporcionado.' });
+    if(!turnosAgenda) {
+      res.json(null);
+    }else{
+      console.log(turnosAgenda);
+      res.json(turnosAgenda);
     }
-
-    res.json({ message: 'Registro eliminado exitosamente.', deletedAgenda });
-  } catch (error) {
-    console.error('Error al eliminar registro de la agenda:', error);
-    res.status(500).json({ message: 'Error interno del servidor al eliminar el registro.' });
+   
+  } catch (err) {
+    console.error('Error al obtener los turnos:', err);
+    res.status(400).json({ error: 'Error al obtener los turnos' });
   }
 });
 
-function convertirHoraAMinutos(hora) {
-  const [horas, minutos] = hora.split(':').map(Number);
-  return horas * 60 + minutos;
+
+ruta.delete('/:idTurno', autentificarToken, async (req, res) => {
+  
+      try {
+          const idTurno = req.params.idTurno;
+          console.log(idTurno)
+          await eliminarTurno(idTurno);
+          res.json("Turno eliminado exitosamente");
+      } catch (err) {
+          console.error('Error al eliminar el turno:', err.message);
+          res.status(400).json({ error: err.message });
+      }
+});
+
+
+async function eliminarTurno(id) {
+  try {
+    const turno = await Agenda.findById(id);
+    if (!turno) {
+      throw new Error('El turno no existe');
+    }
+    await turno.deleteOne();
+  } catch (err) {
+    throw new Error(`Error al eliminar el turno: ${err.message}`);
+  }
 }
 
 
+ruta.get('/', async (req, res) => {
+ console.log("en turnos disponibles llega"+ req.data);
+  try {
+    let turnos = await listarTurnosDisponibles();
+  //  console.log(turnos);
+     res.json(turnos);
+  } catch (err) {
+    console.error('Error al obtener los turnos:', err);
+    res.status(400).json({ error: 'Error al obtener los turnos' });
+  }
+});
+
+// Función para listar todos los turnos de la base de datos
+async function listarTurnos() {
+  let turnos = await Agenda.find();
+  return turnos;
+}
+
+// Función para listar todos los turnos de la base de datos
+async function listarTurnosDisponibles() {
+  let turnos = await Agenda.find({id_usuario :null});
+  return turnos;
+}
 module.exports = ruta;
