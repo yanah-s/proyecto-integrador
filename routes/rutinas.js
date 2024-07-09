@@ -100,6 +100,7 @@ const updateSchema = Joi.object({
 
 
 ruta.get('/', autentificarToken , async (req, res) => {
+    console.log(req.usuario.id);
     try {
         let rutinas = await listarRutinas();
         res.json(rutinas)

@@ -47,8 +47,14 @@ const usuarioSchema = new mongoose.Schema({
     observaciones: {
         type: String,
          default:""
-    }
-
+    },
+    notificacionesUsuario: [
+        {
+            message: { type: String, required: true },
+            read: { type: Boolean, default: false },
+            timestamp: { type: Date, default: Date.now }
+        }
+    ]
 });
 
 

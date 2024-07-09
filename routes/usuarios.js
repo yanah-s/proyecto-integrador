@@ -259,7 +259,7 @@ async function listarUsuarios(){
 
 async function listarUsuariosActivos(){
     let usuarios = await Usuario.
-    find(({estado: true}));
+    find(({estado: true, administrador: false}));
     return usuarios;
 }
 
