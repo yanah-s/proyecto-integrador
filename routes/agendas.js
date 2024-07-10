@@ -5,6 +5,7 @@ const ruta = express.Router();
 const Joi = require('@hapi/joi');
 const moment = require('moment-timezone');
 const autentificarToken = require ('../middleware/autToken');
+
 // Validación de los parámetros de la agenda
 const schema = Joi.object({
   fecha: Joi.date().required(),
@@ -93,14 +94,40 @@ ruta.post('/', autentificarToken ,async (req, res) => {
   }
 });
 
-ruta.put('/', (req, res) => {
+ruta.put('/',async (req, res) => {
  
   try{
     const { usuarioId, turnoId } = req.body; 
-    console.log("este es el ID QUE LLEGA"+ usuarioId);
    let resultado = agendarUsuario(usuarioId, turnoId);
    console.log(resultado);
-   resultado.then(valor => {
+   const admin = await Usuario.findOne({ administrador: true });
+    const usuarioAgendado = await Usuario.findOne({_id : usuarioId});
+    const agenda = await Agenda.findOne({ _id : turnoId});
+    const message = "Se agendo un nuevo usuario: " + usuarioAgendado.nombre ;
+    const messageUsuario = "Su turno de entrevista quedo agendado para el día "+ agenda.fecha + "a las : "+agenda.hora_desde;
+   const newNotification = {
+       message,
+       read: false,
+       timestamp: Date.now()
+   };
+
+  //  const newNotificationUsuario = {
+  //      messageUsuario,
+  //      read: false,
+  //      timestamp: Date.now()
+  //  }
+
+   await admin.updateOne(
+       { $push: { notificacionesUsuario: newNotification } }
+   );
+
+  //  await usuarioAgendado.updateOne(
+  //   { $push: { notificacionesUsuario: newNotificationUsuario } }
+  // );
+
+   resultado.then
+   (valor => {
+    
        res.json({
            valor
        });
@@ -182,6 +209,7 @@ async function eliminarTurno(id) {
     if (!turno) {
       throw new Error('El turno no existe');
     }
+    await notificarAdminNuevaEntrevista();
     await turno.deleteOne();
   } catch (err) {
     throw new Error(`Error al eliminar el turno: ${err.message}`);
@@ -193,7 +221,7 @@ ruta.get('/', async (req, res) => {
  console.log("en turnos disponibles llega"+ req.data);
   try {
     let turnos = await listarTurnosDisponibles();
-  //  console.log(turnos);
+    
      res.json(turnos);
   } catch (err) {
     console.error('Error al obtener los turnos:', err);

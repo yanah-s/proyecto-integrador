@@ -132,7 +132,7 @@ ruta.get('/',autentificarToken, async (req, res) => {
     try {
         
         let usuarios = await listarUsuariosActivos();
-        res.json(usuarios)
+        res.json(usuarios);
     } catch (err) {
         res.status(400).json({ err });
     }

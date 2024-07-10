@@ -76,6 +76,7 @@ ruta.post('/', async (req, res) => {
             }
         });
     } catch (err) {
+        console.log(err);
         return res.status(500).json({ mensaje: 'Error de conexión', error: err.message });
     }
 });

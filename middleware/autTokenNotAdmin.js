@@ -3,7 +3,7 @@ const jwt = require('jsonwebtoken');
 const Usuario = require('../models/usuario_model');
 const config = require('../config/development.json');
 
-const autentificarToken = async (req, res, next) => {
+const autentificarTokenNotAdmin = async (req, res, next) => {
     try {
         const authHeader = req.headers['authorization'];
         const token = authHeader && authHeader.split(' ')[1];
@@ -26,10 +26,6 @@ const autentificarToken = async (req, res, next) => {
             return res.status(403).send({ message: 'Usuario inactivo' }); 
         }
 
-        if (!usuario.administrador) {
-            console.log("Usuario no es administrador");
-            return res.status(403).send({ message: 'Usuario no es administrador' }); // Usuario no es administrador
-        }
 
         // Adjuntar el usuario al request para uso posterior
         req.usuario = usuario;
@@ -43,4 +39,4 @@ const autentificarToken = async (req, res, next) => {
 
 
 
-module.exports = autentificarToken;
+module.exports = autentificarTokenNotAdmin;

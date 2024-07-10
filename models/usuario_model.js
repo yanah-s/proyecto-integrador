@@ -50,7 +50,7 @@ const usuarioSchema = new mongoose.Schema({
     },
     notificacionesUsuario: [
         {
-            message: { type: String, required: true },
+            message: { type: String },
             read: { type: Boolean, default: false },
             timestamp: { type: Date, default: Date.now }
         }
