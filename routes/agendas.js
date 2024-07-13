@@ -98,6 +98,7 @@ ruta.put('/',async (req, res) => {
  
   try{
     const { usuarioId, turnoId } = req.body; 
+    // const user = Usuario.findById({usuarioId});
    let resultado = agendarUsuario(usuarioId, turnoId);
    console.log(resultado);
    const admin = await Usuario.findOne({ administrador: true });
@@ -160,7 +161,7 @@ async function agendarUsuario(id_usuario, id_turno){
         throw new Error('turno no encontrado');
       }
 
-      agenda.id_usuario = id_usuario;
+      agenda.usuario = usuario;
 
       await agenda.save();
 
@@ -193,7 +194,7 @@ ruta.delete('/:idTurno', autentificarToken, async (req, res) => {
   
       try {
           const idTurno = req.params.idTurno;
-          console.log(idTurno)
+        //  console.log(idTurno)
           await eliminarTurno(idTurno);
           res.json("Turno eliminado exitosamente");
       } catch (err) {
@@ -218,7 +219,7 @@ async function eliminarTurno(id) {
 
 
 ruta.get('/', async (req, res) => {
- console.log("en turnos disponibles llega"+ req.data);
+// console.log("en turnos disponibles llega"+ req.data);
   try {
     let turnos = await listarTurnosDisponibles();
     
@@ -231,13 +232,14 @@ ruta.get('/', async (req, res) => {
 
 // Función para listar todos los turnos de la base de datos
 async function listarTurnos() {
-  let turnos = await Agenda.find();
+  const turnos = await Agenda.find().populate('usuario');
   return turnos;
 }
 
 // Función para listar todos los turnos de la base de datos
 async function listarTurnosDisponibles() {
-  let turnos = await Agenda.find({id_usuario :null});
+  let turnos = await Agenda.find({usuario :null});
+  
   return turnos;
 }
 module.exports = ruta;

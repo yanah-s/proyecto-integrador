@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const Joi = require('@hapi/joi');
+//const Usuario = require('./usuario_model');
 
 const agendaSchema = new mongoose.Schema({
      fecha: {
@@ -14,11 +15,11 @@ const agendaSchema = new mongoose.Schema({
         type: Date,
         required: true
       },
-      id_usuario: {
+      usuario: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Usuario',
-        unique : true,
-        default: null
+        required: false,
+        default : null
       },
       observacion:{
         type: String
