@@ -2,44 +2,41 @@ const express = require('express');
 const Usuario = require('../models/usuario_model');
 const Joi = require('@hapi/joi');
 const ruta = express.Router();
-const nodemailer = require('nodemailer');
 const mongoose = require('mongoose');
 const autentificarToken = require ('../middleware/autToken');
-
-    // Configurar el transporter 
-    const transporter = nodemailer.createTransport({
-        host: "smtp.office365.com",
-        port: "587",
-        service: 'hotmail',
-        auth: {
-            user: 'avance.fit@hotmail.com',  // Correo que envia el codigo
-            pass: 'avance2024'  // Contraseña de correo 
-        }
-    });
+const emailjs = require('@emailjs/nodejs')
 
 ruta.post('/recuperar-passw', async (req, res) => {
-
     const destinatario = req.body.email;
     if (!destinatario) {
         return res.status(400).json({ error: 'Se requiere el correo del destinatario' });
     }
-    const { auth: { user } } = transporter.options;
+
     try {
         const codigoRecuperacion = generarCodigoRecuperacion();  // Función para generar un código aleatorio
-        
-         //Enviar el correo
-         await transporter.sendMail({
-             from: user,
-             to: destinatario,
-             subject: 'Código de recuperación de contraseña',
-             text: `Tu código de recuperación de contraseña es: ${codigoRecuperacion}. 
-             Puedes cambiar tu contraseña siguiendo este enlace: http://localhost:5000`,
-           
+        emailjs.init({
+            publicKey: "7--swjL0vAAZOenXV",
+            privateKey: "3pK0dNgGjam0d4V4FfYym",
             });
-      
-        setearCodigoRecuperacion(destinatario,codigoRecuperacion );
+        
+            const templateParams = {
+                destinatario: destinatario,
+                codigo: codigoRecuperacion
+            };
+        
+            emailjs.send('service_zxoqdx3', 'template_1grdk19', templateParams).then(
+                (response) => {
+                    console.log('SUCCESS!', response.status, response.text);
+                    setearCodigoRecuperacion(destinatario,codigoRecuperacion );
 
-         res.status(200).json({ mensaje: 'Correo enviado correctamente' });
+                    res.status(200).json({ mensaje: 'Correo enviado correctamente' });
+                },
+                (err) => {
+                    console.log('FAILED...', err);
+                    res.status(500).json({ error: 'Hubo un error al enviar el correo' });
+                },
+            );
+       
     } catch (error) {
          console.error('Error al enviar el correo:', error);
          res.status(500).json({ error: 'Hubo un error al enviar el correo' });
