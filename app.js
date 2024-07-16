@@ -8,13 +8,14 @@ const logout = require ('./routes/logout')
 const agendas = require('./routes/agendas');
 const ejercicio = require('./routes/ejercicio');
 const rutina = require('./routes/rutinas');
+const rutina_ej_alumno = require('./routes/rutina_ej_alumno');
 
-const dbHost = 'localhost';
+const dbHost = '127.0.0.1';
 //'3.16.90.77'; 
 const dbPort = '27017'; 
 const dbName = 'mi_base_de_datos'; 
 var servidor = 'local';
-if (dbHost != 'localhost'){
+if (dbHost != '127.0.0.1'){
     servidor = 'aws';
 } 
 const dbURL = `mongodb://${dbHost}:${dbPort}/${dbName}`;
@@ -36,6 +37,7 @@ app.use('/api/rutinas', rutina);
 // app.use('/api/agenda', agenda);
 app.use('/api/autentificacion' ,autentificacion);
 app.use('/api/logout',logout);
+app.use('/api/rutina_ej_alumno', rutina_ej_alumno);
 
 const port = process.env.PORT || 3000;
 app.listen(port, () => {
