@@ -9,7 +9,6 @@ const ejercicio = require('./routes/ejercicio');
 const rutina = require('./routes/rutinas');
 const notificaciones = require ('./routes/notificaciones');
 const dbHost = 'localhost';
-//'3.16.90.77'; 
 const dbPort = '27017'; 
 const dbName = 'mi_base_de_datos'; 
 var servidor = 'local';
@@ -27,6 +26,7 @@ const app = express();
 app.use(express.json());
 app.use(cors());
 app.use(express.urlencoded({extended:true}));
+
 
 app.use('/api/usuarios', usuarios);
 app.use('/api/agenda', agendas);

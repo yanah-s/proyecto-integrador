@@ -210,7 +210,6 @@ async function eliminarTurno(id) {
     if (!turno) {
       throw new Error('El turno no existe');
     }
-    await notificarAdminNuevaEntrevista();
     await turno.deleteOne();
   } catch (err) {
     throw new Error(`Error al eliminar el turno: ${err.message}`);
