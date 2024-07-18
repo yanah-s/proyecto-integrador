@@ -2,6 +2,7 @@ const express = require('express');
 const ruta = express.Router();
 const Joi = require('@hapi/joi');
 const RutinaEjercicioAlumno = require('../models/rutina_ej_alumno_model');
+const autentificarTokenNotAdmin = require ('../middleware/autTokenNotAdmin');
 
 // const rutinaSchema = Joi.object({
 //   _id: Joi.string().length(24).required().messages({
@@ -93,7 +94,7 @@ const schema = Joi.object({
     })
 });
 
-ruta.get('/', async (req, res) => {
+ruta.get('/',autentificarTokenNotAdmin, async (req, res) => {
   try {
     const rutinaEjercicioAlumnos = await RutinaEjercicioAlumno.find()
       .populate('rutina')
@@ -106,7 +107,7 @@ ruta.get('/', async (req, res) => {
   }
 });
 
-ruta.get('/usuario',  async (req, res) => {
+ruta.get('/usuario',autentificarTokenNotAdmin,  async (req, res) => {
   try {
       const { usuario } = req.query;
       let rutina_ej_alumno = await obtenerEjerciciosDelAlumno(usuario);
@@ -118,7 +119,7 @@ ruta.get('/usuario',  async (req, res) => {
 });
 
 // POST: Crear una nueva rutina_ejercicio_alumno
-ruta.post('/', async (req, res) => {
+ruta.post('/',autentificarTokenNotAdmin, async (req, res) => {
   try {
     const { rutina, ejercicio, usuario, fecha, series, repeticiones, observaciones, completado } = req.body;
 
@@ -150,7 +151,7 @@ ruta.post('/', async (req, res) => {
 });
 
 // PUT: Actualizar una rutina_ejercicio_alumno por ID
-ruta.put('/:id', async (req, res) => {
+ruta.put('/:id',autentificarTokenNotAdmin, async (req, res) => {
   try {
     const { id } = req.params;
     const updatedData = req.body;
