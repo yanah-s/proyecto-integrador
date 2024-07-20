@@ -81,6 +81,12 @@ const schema = Joi.object({
       'number.integer': 'Las repeticiones deben ser un número entero.',
       'any.required': 'Las repeticiones son obligatorias.'
     }),
+  peso: Joi.number()
+    .integer()
+    .messages({
+      'number.base': 'El peso debe ser un número.',
+      'number.integer': 'El peso debe ser un número entero.'
+    }),
   observaciones: Joi.string()
     .optional()
     .allow('')

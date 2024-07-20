@@ -32,6 +32,9 @@ const rutina_ej_alumnoSchema = new mongoose.Schema({
         type: Number, 
         required: true 
     },
+    peso: {
+        type: Number
+    },
     completado: { 
         type: Boolean, 
         default: false 
