@@ -3,7 +3,7 @@ const Ejercicio = require('../models/ejercicio_model');
 const Joi = require('@hapi/joi');
 const ruta = express.Router();
 const autentificarToken = require ('../middleware/autToken');
-
+const autentificarTokenNotAdmin = require('../middleware/autTokenNotAdmin')
 const schema = Joi.object({
     nombre: Joi.string()
     .min(3)
@@ -102,7 +102,7 @@ const updateSchema = Joi.object({
 });
 
 
-ruta.get('/', autentificarToken , async (req, res) => {
+ruta.get('/', autentificarTokenNotAdmin , async (req, res) => {
     try {
         let ejercicios = await listarEjercicios();
         res.json(ejercicios)
