@@ -4,44 +4,41 @@ const Joi = require('@hapi/joi');
 const RutinaEjercicioAlumno = require('../models/rutina_ej_alumno_model');
 const autentificarTokenNotAdmin = require ('../middleware/autTokenNotAdmin');
 
-// const rutinaSchema = Joi.object({
-//   _id: Joi.string().length(24).required().messages({
-//     'string.empty': 'El ID de la rutina no puede estar vacía.',
-//     'any.required': 'El ID de la rutina es obligatoria.'
-//   }),
-//   nombre: Joi.string()
-//   .min(3)
-//   .max(50)
-//   .required()
-//   .messages({
-//       'string.empty': 'El nombre no puede estar vacío.',
-//       'string.min': 'El nombre debe tener al menos {#limit} caracteres.',
-//       'string.max': 'El nombre debe tener como máximo {#limit} caracteres.',
-//       'any.required': 'El nombre es obligatorio.'
-//   })
-// });
-
-// const ejercicioSchema = Joi.object({
-//   _id: Joi.string().length(24).required().messages({
-//       'string.empty': 'El ID del ejercicio no puede estar vacío.',
-//       'any.required': 'El ID del ejercicio es obligatorio.'
-//   }),
-//   nombre: Joi.string().required().messages({
-//       'string.empty': 'El nombre del ejercicio no puede estar vacío.',
-//       'any.required': 'El nombre del ejercicio es obligatorio.'
-//   })
-// });
-
-// const usuarioSchema = Joi.object({
-//   _id: Joi.string().length(24).required().messages({
-//       'string.empty': 'El ID del usuario no puede estar vacío.',
-//       'any.required': 'El ID del usuario es obligatorio.'
-//   }),
-//   nombre: Joi.string().required().messages({
-//       'string.empty': 'El nombre del usuario no puede estar vacío.',
-//       'any.required': 'El nombre del usuario es obligatorio.'
-//   })
-// });
+const updateSchema = Joi.object({
+  series: Joi.number()
+    .integer()
+    .required()
+    .messages({
+      'number.base': 'Las series deben ser un número.',
+      'number.integer': 'Las series deben ser un número entero.',
+      'any.required': 'Las series son obligatorias.'
+    }),
+  repeticiones: Joi.number()
+    .integer()
+    .required()
+    .messages({
+      'number.base': 'Las repeticiones deben ser un número.',
+      'number.integer': 'Las repeticiones deben ser un número entero.',
+      'any.required': 'Las repeticiones son obligatorias.'
+    }),
+  peso: Joi.number()
+    .integer()
+    .messages({
+      'number.base': 'El peso debe ser un número.',
+      'number.integer': 'El peso debe ser un número entero.'
+    }),
+  observaciones: Joi.string()
+    .optional()
+    .allow('')
+    .messages({
+      'string.base': 'Las observaciones deben ser un texto.'
+    }),
+  completado: Joi.boolean()
+    .default(false)
+    .messages({
+      'boolean.base': 'El campo completado debe ser un valor booleano.'
+    })
+});
 
 const schema = Joi.object({
   rutina: Joi.string().length(24).hex().required().messages({
@@ -127,7 +124,7 @@ ruta.get('/usuario',autentificarTokenNotAdmin,  async (req, res) => {
 // POST: Crear una nueva rutina_ejercicio_alumno
 ruta.post('/',autentificarTokenNotAdmin, async (req, res) => {
   try {
-    const { rutina, ejercicio, usuario, fecha, series, repeticiones, observaciones, completado } = req.body;
+    const { rutina, ejercicio, usuario, fecha, series, repeticiones, peso, observaciones, completado } = req.body;
 
     const { error, value } = schema.validate({
       rutina,
@@ -136,6 +133,7 @@ ruta.post('/',autentificarTokenNotAdmin, async (req, res) => {
       fecha,
       series,
       repeticiones,
+      peso,
       observaciones,
       completado
     });
@@ -173,20 +171,34 @@ ruta.post('/',autentificarTokenNotAdmin, async (req, res) => {
 
 // PUT: Actualizar una rutina_ejercicio_alumno por ID
 ruta.put('/:id',autentificarTokenNotAdmin, async (req, res) => {
+  const { id } = req.params;
+  const body = req.body;
+  const { error, value } = updateSchema.validate({
+    series: body.series,
+    repeticiones: body.repeticiones,
+    peso: body.peso,
+    observaciones: body.observaciones,
+    completado: body.completado
+  });
+
+  if (error) {
+      const detailedErrors = error.details.map(detail => ({
+          message: detail.message,
+          path: detail.path
+      }));
+      console.log(detailedErrors);
+      res.status(400).json({ error: detailedErrors });
+  }
+
   try {
-    const { id } = req.params;
-    const updatedData = req.body;
-    const updatedRutinaEjercicioAlumno = await RutinaEjercicioAlumno.findByIdAndUpdate(id, updatedData, { new: true })
-      .populate('rutina')
-      .populate('ejercicio')
-      .populate('usuario')
-      .exec();
+    const updatedRutinaEjercicioAlumno = await RutinaEjercicioAlumno.findByIdAndUpdate(id, value, { new: true });
+      
     if (!updatedRutinaEjercicioAlumno) {
-      return res.status(404).json({ error: 'Rutina de ejercicio de alumno no encontrada' });
+      return res.status(404).json({ error: 'El ejercicio del alumno no fue encontrado' });
     }
     res.status(200).json(updatedRutinaEjercicioAlumno);
   } catch (error) {
-    res.status(400).json({ error: 'Error al actualizar la rutina de ejercicio de alumno' });
+    res.status(400).json({ error: 'Error al actualizar el ejercicio del alumno' });
   }
 });
 

@@ -112,19 +112,11 @@ ruta.put('/',async (req, res) => {
        timestamp: Date.now()
    };
 
-  //  const newNotificationUsuario = {
-  //      messageUsuario,
-  //      read: false,
-  //      timestamp: Date.now()
-  //  }
 
    await admin.updateOne(
        { $push: { notificacionesUsuario: newNotification } }
    );
 
-  //  await usuarioAgendado.updateOne(
-  //   { $push: { notificacionesUsuario: newNotificationUsuario } }
-  // );
 
    resultado.then
    (valor => {
@@ -171,7 +163,7 @@ async function agendarUsuario(id_usuario, id_turno){
   }
 }
 
-ruta.get('/turnos',autentificarToken, async (req, res) => {
+ruta.get('/turnos', async (req, res) => {
  
   try {
     let turnosAgenda = await listarTurnos();
