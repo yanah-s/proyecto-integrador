@@ -3,6 +3,8 @@ const ruta = express.Router();
 const Joi = require('@hapi/joi');
 const RutinaEjercicioAlumno = require('../models/rutina_ej_alumno_model');
 const autentificarTokenNotAdmin = require ('../middleware/autTokenNotAdmin');
+const autentificarToken = require('../middleware/autToken');
+const Usuario = require('../models/usuario_model');
 
 const updateSchema = Joi.object({
   series: Joi.number()
@@ -122,7 +124,7 @@ ruta.get('/usuario',autentificarTokenNotAdmin,  async (req, res) => {
 });
 
 // POST: Crear una nueva rutina_ejercicio_alumno
-ruta.post('/',autentificarTokenNotAdmin, async (req, res) => {
+ruta.post('/',autentificarToken, async (req, res) => {
   try {
     const { rutina, ejercicio, usuario, fecha, series, repeticiones, peso, observaciones, completado } = req.body;
 
@@ -144,33 +146,33 @@ ruta.post('/',autentificarTokenNotAdmin, async (req, res) => {
           message: detail.message,
           path: detail.path
       }));
+     
       return res.status(400).json({ error: detailedErrors });
   }
 
     const rutina_ej_alumno = await crearRutina_ej_alumno(value);
 
-    const message = "Tienes una nueva rutina disponible!";
-   const newNotification = {
-       message,
-       read: false,
-       timestamp: Date.now()
-   };
-
-   await usuario.updateOne(
-       { $push: { notificacionesUsuario: newNotification } }
-   );
-
-
+    const user = await Usuario.findById(usuario);
+     const message = "Tienes una nueva rutina disponible!";
+    const newNotification = {
+        message,
+        read: false,
+        timestamp: Date.now()
+    };
+    await user.updateOne(
+        { $push: { notificacionesUsuario: newNotification } }
+    );
     res.json({ valor: rutina_ej_alumno });
 
 
   } catch (err) {
+    console.log("explota en el catch");
     res.status(400).json({ err: err.message });
 }
 });
 
 // PUT: Actualizar una rutina_ejercicio_alumno por ID
-ruta.put('/:id',autentificarTokenNotAdmin, async (req, res) => {
+ruta.put('/:id',autentificarToken, async (req, res) => {
   const { id } = req.params;
   const body = req.body;
   const { error, value } = updateSchema.validate({

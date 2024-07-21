@@ -33,7 +33,7 @@ const autentificarToken = async (req, res, next) => {
 
         // Adjuntar el usuario al request para uso posterior
         req.usuario = usuario;
-       
+       console.log("aut token de " + usuario);
         next();
     } catch (err) {
         console.error('Error verificando token:', err);
