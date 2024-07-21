@@ -150,7 +150,22 @@ ruta.post('/',autentificarTokenNotAdmin, async (req, res) => {
   }
 
     const rutina_ej_alumno = await crearRutina_ej_alumno(value);
+
+    const message = "Tienes una nueva rutina disponible!";
+   const newNotification = {
+       message,
+       read: false,
+       timestamp: Date.now()
+   };
+
+   await usuario.updateOne(
+       { $push: { notificacionesUsuario: newNotification } }
+   );
+
+
     res.json({ valor: rutina_ej_alumno });
+
+
   } catch (err) {
     res.status(400).json({ err: err.message });
 }
