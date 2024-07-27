@@ -111,9 +111,14 @@ ruta.get('/', async (req, res) => {
 
 ruta.get('/usuario',  async (req, res) => {
   try {
-      const { usuario } = req.query;
-      let rutina_ej_alumno = await obtenerEjerciciosDelAlumno(usuario);
-      res.json(rutina_ej_alumno);
+      const { usuario, fecha } = req.query;
+      console.log(`Usuario: ${usuario}, Fecha: ${fecha}`); 
+      if (!usuario) {
+        return res.status(400).json({ error: 'Parámetros requeridos faltantes' });
+      }
+      let rutina_ej_alumno = await obtenerEjerciciosDelAlumno(usuario, fecha);
+      console.log(rutina_ej_alumno);
+      res.json(rutina_ej_alumno || []);
   } catch (err) {
       console.error('Error al listar los ejercicios del alumno:', err);
       res.status(400).json({ err });
@@ -150,7 +155,7 @@ ruta.post('/', async (req, res) => {
     res.json({ valor: rutina_ej_alumno });
   } catch (err) {
     res.status(400).json({ err: err.message });
-}
+} 
 });
 
 // PUT: Actualizar una rutina_ejercicio_alumno por ID
@@ -176,13 +181,42 @@ ruta.put('/:id', async (req, res) => {
 
   try {
     const updatedRutinaEjercicioAlumno = await RutinaEjercicioAlumno.findByIdAndUpdate(id, value, { new: true });
-      
+
     if (!updatedRutinaEjercicioAlumno) {
       return res.status(404).json({ error: 'El ejercicio del alumno no fue encontrado' });
     }
     res.status(200).json(updatedRutinaEjercicioAlumno);
   } catch (error) {
     res.status(400).json({ error: 'Error al actualizar el ejercicio del alumno' });
+  }
+});
+
+ruta.patch('/:id', async (req, res) => {
+  const { id } = req.params;
+  const { completado } = req.body;
+  const { error, value } = Joi.object({
+    completado: Joi.boolean()
+      .required()
+      .messages({
+        'boolean.base': 'El campo completado debe ser un valor booleano.',
+        'any.required': 'El campo completado es obligatorio.'
+      })
+  }).validate({ completado });
+  if (error) {
+    const detailedErrors = error.details.map(detail => ({
+        message: detail.message,
+        path: detail.path
+    }));
+    return res.status(400).json({ error: detailedErrors });
+  }
+  try {
+    const updatedRutinaEjercicioAlumno = await RutinaEjercicioAlumno.findByIdAndUpdate(id, { completado: value.completado }, { new: true });
+    if (!updatedRutinaEjercicioAlumno) {
+      return res.status(404).json({ error: 'El ejercicio del alumno no fue encontrado' });
+    }
+    res.status(200).json(updatedRutinaEjercicioAlumno);
+  } catch (error) {
+    res.status(400).json({ error: 'Error al actualizar el estado de completado del ejercicio del alumno' });
   }
 });
 
@@ -205,15 +239,47 @@ async function crearRutina_ej_alumno(data) {
   return await rutina_ej_alumno.save();
 }
 
-async function obtenerEjerciciosDelAlumno(usuario) {
-  let query = {}; 
+async function obtenerEjerciciosDelAlumno(usuario, fecha) {
+  let query = {};
 
   if (usuario) {
-    query.usuario = usuario; 
+    query.usuario = usuario;
   }
-  console.log(query);
-  let ejercicios = await RutinaEjercicioAlumno.find(query).populate('ejercicio').populate('rutina');
-  return ejercicios;
+
+  if (fecha) {
+    // Convierte la fecha en formato ISO 8601
+    const startOfDay = new Date(fecha);
+    const endOfDay = new Date(startOfDay);
+    endOfDay.setDate(startOfDay.getDate() + 1);
+
+    query.fecha = {
+      $gte: startOfDay,
+      $lt: endOfDay
+    };
+  }
+
+  console.log('Consulta:', query);
+  const ejercicios = await RutinaEjercicioAlumno.find(query).populate('rutina').populate('ejercicio');
+
+  if (fecha) {
+    // Agrupa los ejercicios por rutina solo si se pasa una fecha
+    const rutinaEjercicios = ejercicios.reduce((acc, ejercicio) => {
+      const rutinaId = ejercicio.rutina._id;
+      if (!acc[rutinaId]) {
+        acc[rutinaId] = {
+          rutina: ejercicio.rutina,
+          ejercicios: []
+        };
+      }
+      acc[rutinaId].ejercicios.push(ejercicio);
+      return acc;
+    }, {});
+
+    return Object.values(rutinaEjercicios);
+  } else {
+    // Si no se pasa una fecha, retorna los ejercicios sin agrupar
+    return ejercicios;
+  }
 }
 
 module.exports = ruta;
