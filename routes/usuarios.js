@@ -4,6 +4,7 @@ const Joi = require('@hapi/joi');
 const ruta = express.Router();
 const mongoose = require('mongoose');
 const autentificarToken = require ('../middleware/autToken');
+const autTokenNotAdmin = require('../middleware/autTokenNotAdmin')
 const emailjs = require('@emailjs/nodejs')
 
 ruta.post('/recuperar-passw', async (req, res) => {
@@ -57,20 +58,20 @@ function generarCodigoRecuperacion() {
     return  Math.random().toString(36).slice(2, 8).toUpperCase();  
 }
 
-const validadEdad = (fechaIngresada) => {
-    const actual = new Date();
-    const fecha = new Date(fechaIngresada);
-    const edad = actual.getFullYear() - fecha.getFullYear();
-    const meses = actual.getMonth() - fecha.getMonth();
+// const validadEdad = (fechaIngresada) => {
+//     const actual = new Date();
+//     const fecha = new Date(fechaIngresada);
+//     const edad = actual.getFullYear() - fecha.getFullYear();
+//     const meses = actual.getMonth() - fecha.getMonth();
 
-    // Ajusta la edad si el mes de nacimiento no ha ocurrido aún 
-    if (meses < 0 || (meses === 0 && actual.getDate() < fecha.getDate())) {
-        age--;
-    }
+//     // Ajusta la edad si el mes de nacimiento no ha ocurrido aún 
+//     if (meses < 0 || (meses === 0 && actual.getDate() < fecha.getDate())) {
+//         age--;
+//     }
 
-    // Verifica si la edad está entre 16 y 50 años
-    return age >= 16 && age <= 50;
-};
+//     // Verifica si la edad está entre 16 y 50 años
+//     return age >= 16 && age <= 50;
+// };
 
 const schema = Joi.object({
     nombre: Joi.string()
@@ -97,9 +98,14 @@ const schema = Joi.object({
             'string.email': 'El correo electrónico debe ser un correo válido.',
             'any.required': 'El correo electrónico es un campo obligatorio.'
         }),
-        patologias: Joi.string().allow('') // Permitir que patologias sea una cadena vacía
+        patologias: Joi.string().allow('') ,
 
 
+        telefono: Joi.string()
+        .required()
+        .messages({
+            'any.required': 'El telefono es un campo obligatorio.'
+        })
 });
 
 //verifica edad de los usuairos
@@ -172,11 +178,10 @@ ruta.put('/:email',autentificarToken, (req, res) => {
       
 });
 
-ruta.put('/editarUsuario/:id',autentificarToken, (req, res) => {
 
-    console.log(req.params.id);
+ruta.get('/:id', (req, res) => {
     try{
-     let resultado = editarUsuario (req.params.id, req.body);
+     let resultado = buscarUsuarioPorId(req.params.id);
      resultado.then(valor => {
          res.json({
              valor
@@ -193,6 +198,89 @@ ruta.put('/editarUsuario/:id',autentificarToken, (req, res) => {
     }
        
  });
+
+ async function buscarUsuarioPorId(id){
+    let user = await Usuario.findById(id);
+    return user;
+}
+
+
+ruta.put('/editarUsuario/:id', (req, res) => {
+
+  console.log("llega al editar");
+    try{
+     let resultado = editarUsuario (req.params.id, req.body);
+     resultado.then(valor => {
+         res.json({
+             valor
+         });
+     }).catch(err => {
+        console.log("error primer catch");
+         res.status(400).json({
+             error: 'Error al actualizar usuario'
+         });
+     });
+    }catch{
+        console.log("error 2 catch");
+     res.status(400).json({
+         error: 'Datos inválidos'
+     });
+    }
+       
+ });
+
+ ruta.put('/editar/:id', (req, res) => {
+
+    console.log("llega al editar");
+      try{
+       let resultado = editarUsuarioNoAdmin (req.params.id, req.body);
+       resultado.then(valor => {
+           res.json({
+               valor
+           });
+       }).catch(err => {
+          console.log("error primer catch");
+           res.status(400).json({
+               error: 'Error al actualizar usuario'
+           });
+       });
+      }catch{
+          console.log("error 2 catch");
+       res.status(400).json({
+           error: 'Datos inválidos'
+       });
+      }
+         
+   });
+
+   async function editarUsuarioNoAdmin (id, body){
+    console.log(id);
+    try {
+        let usuario = await Usuario.findOne({ "_id": id });
+
+        if (!usuario) {
+            throw new Error('Usuario no encontrado');
+        }
+        
+        else {
+            console.log("cambiando passw");
+            if(body.password != "" || body.password != usuario.password){
+                usuario.password =body.password;
+            }
+            if(body.telefono != "" || body.telefono != usuario.telefono){
+                usuario.telefono = body.telefono;
+            }
+
+            
+            await usuario.save();
+            console.log(usuario);
+        }
+       
+        return usuario;
+    } catch (err) {
+        throw new Error('Error al actualizar el usuario: ' + err.message);
+    }
+}
  
 
  ruta.put('/asignar/:id',autentificarToken, (req, res) => {
@@ -243,7 +331,8 @@ async function crearUsuario(body){
         estado : body.estado,
         alumno : body.alumno,
         administrador : body.administrador,
-        patologias : body.patologias
+        patologias : body.patologias,
+        telefono : body.telefono
 
     });
     return await usuario.save();

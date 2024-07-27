@@ -42,12 +42,8 @@ const dividirTurnosEnIntervalos = (turno) => {
   return intervalos;
 };
 
-// Ruta para guardar la agenda
 ruta.post('/', autentificarToken ,async (req, res) => {
-
   console.log(req.data);
-  // if (req.isAdmin) {
-   
   const { datos } = req.body;
 
   console.log("datos recibidos", datos);
@@ -61,27 +57,38 @@ ruta.post('/', autentificarToken ,async (req, res) => {
         const { hora_desde, hora_hasta } = datos[fecha];
 
         // Dividir los turnos en intervalos
-         const intervalos = dividirTurnosEnIntervalos({
+        const intervalos = dividirTurnosEnIntervalos({
           fecha: moment(fecha),
           hora_desde: moment(hora_desde),
           hora_hasta: moment(hora_hasta),
           id_usuario: null, 
-          
         });
-        
+
         for (const intervalo of intervalos) {
           console.table(intervalos);
-          try {
-            const intervaloItem = new Agenda(intervalo);
-            await intervaloItem.save();
+          
+          // Verificar si el intervalo ya existe en la base de datos
+          const intervaloExistente = await Agenda.findOne({
+            fecha: intervalo.fecha,
+            hora_desde: intervalo.hora_desde,
+            hora_hasta: intervalo.hora_hasta
+          });
 
-            agendaItems.push(intervaloItem);
+          if (!intervaloExistente) {
+            try {
+              const intervaloItem = new Agenda(intervalo);
+              await intervaloItem.save();
 
-            console.log("agenda intems" + agendaItems);
-          } catch (err) {
-            console.error('Error al guardar disponibiliad en la base de datos:', err);
-            res.status(500).json({ error: 'Error al guardar el intervalo en la base de datos' });
-            return;
+              agendaItems.push(intervaloItem);
+
+              console.log("agenda items" + agendaItems);
+            } catch (err) {
+              console.error('Error al guardar disponibilidad en la base de datos:', err);
+              res.status(500).json({ error: 'Error al guardar el intervalo en la base de datos' });
+              return;
+            }
+          } else {
+            console.log(`El intervalo ${intervalo.fecha} de ${intervalo.hora_desde} a ${intervalo.hora_hasta} ya existe`);
           }
         }
       }
@@ -93,6 +100,7 @@ ruta.post('/', autentificarToken ,async (req, res) => {
     res.status(500).json({ error: 'Error al guardar en la base de datos' });
   }
 });
+
 
 ruta.put('/',async (req, res) => {
  
@@ -221,9 +229,11 @@ ruta.get('/', async (req, res) => {
   }
 });
 
-// Función para listar todos los turnos de la base de datos
 async function listarTurnos() {
-  const turnos = await Agenda.find().populate('usuario');
+  const hoy = new Date();
+  const turnos = await Agenda.find({ fecha: { $gte: hoy } })
+    .sort({ fecha: 1 }) // Ordenar por fecha ascendente (1 para ascendente, -1 para descendente)
+    .populate('usuario');
   return turnos;
 }
 

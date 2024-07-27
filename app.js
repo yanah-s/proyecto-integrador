@@ -9,6 +9,7 @@ const ejercicio = require('./routes/ejercicio');
 const rutina = require('./routes/rutinas');
 const notificaciones = require ('./routes/notificaciones');
 const rutina_ej_alumno = require('./routes/rutina_ej_alumno');
+const avances = require('./routes/avances');
 
 const dbHost = 'localhost';
 const dbPort = '27017'; 
@@ -38,7 +39,7 @@ app.use('/api/notificaciones', notificaciones);
 app.use('/api/autentificacion' ,autentificacion);
 app.use('/api/logout',logout);
 app.use('/api/rutina_ej_alumno', rutina_ej_alumno);
-
+app.use('/api/avances', avances);
 const port = process.env.PORT || 3000;
 app.listen(port, () => {
     console.log(`Api RESTFul Ok, y ejecutándose en el puerto ${port}...`);

@@ -1,6 +1,5 @@
 const mongoose = require('mongoose');
 
-
 const avanceSchema = new mongoose.Schema({
     fecha: {
         type: Date,
@@ -9,17 +8,26 @@ const avanceSchema = new mongoose.Schema({
     usuario: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Usuario',
-        required: false,
+        required: true,
         default: null
     },
     observacion: {
-        type: String
+        type: String,
+        required: false,
+        default: null
+        
     },
     valorNumerico: {
         type: Number,
+        required: true 
+    },
+    ejercicio: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Ejercicio',
         required: false,
         default: null
     }
 });
+
 
 module.exports = mongoose.model('Avance', avanceSchema);

@@ -48,6 +48,11 @@ const usuarioSchema = new mongoose.Schema({
         type: String,
          default:""
     },
+    telefono: {
+        type: String,
+         default:"",
+         required: true
+    },
     notificacionesUsuario: [
         {
             message: { type: String },
