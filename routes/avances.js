@@ -9,14 +9,21 @@ const autentificarTokenNotAdmin = require('../middleware/autTokenNotAdmin');
 
 // Ruta para obtener avances del usuario y ejercicio
 ruta.get('/usuarioEjercicio', autentificarTokenNotAdmin, async (req, res) => {
-    const idUsuario = req.usuario;
+   // const idUsuario = req.usuario;
     const idEjercicio = req.query.ejercicio;
 
     // console.log("idUsuario:", idUsuario);
     // console.log("idEjercicio:", idEjercicio);
 
     try {
-        let avancesUsuario = await obtenerAvancesEjercicio(idUsuario, idEjercicio);
+
+        const { usuario } = req.query; 
+        if (!usuario) {
+          return res.status(400).json({ error: 'Parámetros requeridos faltantes' });
+        }
+    
+        console.log(usuario);
+        let avancesUsuario = await obtenerAvancesEjercicio(usuario, idEjercicio);
         
         if (!avancesUsuario || avancesUsuario.length === 0) {
             res.json(null);
@@ -71,10 +78,16 @@ async function crearAvanceEjercicio(body, usuario) {
 
 // Ruta para obtener avances del usuario y ejercicio
 ruta.get('/usuarioPeso', autentificarTokenNotAdmin, async (req, res) => {
-    const idUsuario = req.usuario;
+   // const idUsuario = req.usuario;
 
     try {
-        let avancesUsuario = await obtenerAvancesPeso(idUsuario);
+        const { usuario } = req.query; 
+        if (!usuario) {
+          return res.status(400).json({ error: 'Parámetros requeridos faltantes' });
+        }
+    
+        console.log(usuario);
+        let avancesUsuario = await obtenerAvancesPeso(usuario);
         
         if (!avancesUsuario || avancesUsuario.length === 0) {
             res.json(null);

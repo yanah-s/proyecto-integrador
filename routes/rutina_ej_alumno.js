@@ -252,6 +252,68 @@ ruta.delete('/:id', async (req, res) => {
   }
 });
 
+
+ruta.get('/porcentaje', autentificarTokenNotAdmin, async (req, res) => {
+  try {
+    const { usuario } = req.query; 
+    if (!usuario) {
+      return res.status(400).json({ error: 'Parámetros requeridos faltantes' });
+    }
+
+    console.log(usuario);
+    let { porcentaje, totalDiasConEjercicios, totalDiasSinEjercicios } = await obtenerEjerciciosDelAlumnoMes(usuario);
+
+    res.json({ porcentaje, totalDiasConEjercicios, totalDiasSinEjercicios });
+  } catch (err) {
+    console.error('Error al listar los ejercicios del alumno:', err);
+    res.status(400).json({ error: 'Error al listar los ejercicios del alumno' });
+  }
+});
+async function obtenerEjerciciosDelAlumnoMes(usuario) {
+  const estemes = new Date().getMonth() + 1; // Ajuste para MongoDB
+
+  try {
+    // Buscar los ejercicios del alumno para el mes actual
+    const rutinaEjercicioAlumnos = await RutinaEjercicioAlumno.find({
+      usuario: usuario,
+      $expr: { $eq: [{ $month: "$fecha" }, estemes] } // $month devuelve meses de 1 a 12
+    });
+
+    // Mapas para días con y sin ejercicios
+    const diasConEjercicios = new Set();
+    const diasSinEjercicios = new Set();
+
+    rutinaEjercicioAlumnos.forEach((rutina) => {
+      // Obtener el día de la fecha
+      const dia = rutina.fecha.toISOString().split('T')[0]; // Formato YYYY-MM-DD
+
+      // Verificar si hay al menos un booleano en true
+      const hizoEjercicio = typeof rutina.completado === 'boolean' && rutina.completado;
+
+      if (hizoEjercicio) {
+        diasConEjercicios.add(dia);
+      } else {
+        diasSinEjercicios.add(dia);
+      }
+    });
+
+    const totalDiasConEjercicios = diasConEjercicios.size;
+    // Remover los días que ya están en diasConEjercicios de diasSinEjercicios
+    diasConEjercicios.forEach(dia => diasSinEjercicios.delete(dia));
+    const totalDiasSinEjercicios = diasSinEjercicios.size;
+    const total = totalDiasConEjercicios + totalDiasSinEjercicios;
+
+    const porcentaje = total > 0 ? (totalDiasConEjercicios * 100) / total : 0;
+    console.log(totalDiasConEjercicios, totalDiasSinEjercicios);
+    return { porcentaje, totalDiasConEjercicios, totalDiasSinEjercicios };
+  } catch (error) {
+    console.error("Error al obtener los ejercicios:", error);
+    return { porcentaje: 0, totalDiasConEjercicios: 0, totalDiasSinEjercicios: 0 };
+  }
+}
+
+
+
 async function crearRutina_ej_alumno(data) {
   const rutina_ej_alumno = new RutinaEjercicioAlumno(data);
   return await rutina_ej_alumno.save();

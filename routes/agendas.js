@@ -189,6 +189,55 @@ ruta.get('/turnos', async (req, res) => {
   }
 });
 
+ruta.get('/agendaAlumno', async (req, res) => {
+ 
+  try {
+    
+    const { usuario } = req.query; 
+    if (!usuario) {
+      console.log("No se encuentra usuario");
+      return res.status(400).json({ error: 'No se encuentra usuario' });
+    }
+    let turno = await turnoParaUsuario(usuario);
+    
+    if(!turno) {
+      res.json(null);
+    }else{
+      console.log(turno);
+      res.json(turno);
+    }
+   
+  } catch (err) {
+    console.error('Error al obtener los turnos:', err);
+    res.status(400).json({ error: 'Error al obtener los turnos' });
+  }
+});
+
+async function turnoParaUsuario(usuarioId) {
+  try {
+    let usuario = await Usuario.findById(usuarioId);
+    if (!usuario) {
+      console.log("Usuario NO encontrado " + usuarioId);
+      throw new Error('Usuario no encontrado');
+    }
+
+    const hoy = new Date();
+    
+    // Buscar turnos a partir de hoy en adelante
+    const turno = await Agenda.findOne({
+      usuario: usuario._id,
+      fecha: { $gte: hoy } // Filtrar turnos con fecha mayor o igual a hoy
+    })
+    .populate('usuario');
+    
+    return turno;
+  } 
+  catch (error) {
+    console.error(error);
+    return null;
+  }
+}
+
 
 ruta.delete('/:idTurno', autentificarToken, async (req, res) => {
   
