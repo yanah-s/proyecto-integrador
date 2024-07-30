@@ -191,35 +191,6 @@ ruta.put('/:id', async (req, res) => {
   }
 });
 
-ruta.patch('/:id', async (req, res) => {
-  const { id } = req.params;
-  const { completado } = req.body;
-  const { error, value } = Joi.object({
-    completado: Joi.boolean()
-      .required()
-      .messages({
-        'boolean.base': 'El campo completado debe ser un valor booleano.',
-        'any.required': 'El campo completado es obligatorio.'
-      })
-  }).validate({ completado });
-  if (error) {
-    const detailedErrors = error.details.map(detail => ({
-        message: detail.message,
-        path: detail.path
-    }));
-    return res.status(400).json({ error: detailedErrors });
-  }
-  try {
-    const updatedRutinaEjercicioAlumno = await RutinaEjercicioAlumno.findByIdAndUpdate(id, { completado: value.completado }, { new: true });
-    if (!updatedRutinaEjercicioAlumno) {
-      return res.status(404).json({ error: 'El ejercicio del alumno no fue encontrado' });
-    }
-    res.status(200).json(updatedRutinaEjercicioAlumno);
-  } catch (error) {
-    res.status(400).json({ error: 'Error al actualizar el estado de completado del ejercicio del alumno' });
-  }
-});
-
 // DELETE: Eliminar una rutina_ejercicio_alumno por ID
 ruta.delete('/:id', async (req, res) => {
   try {
