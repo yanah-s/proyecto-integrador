@@ -9,16 +9,16 @@ const config = require('../config/development.json');
 
 ruta.get('/', autentificarTokenNotAdmin, async (req, res) => {
     try {
-        console.log(req.usuario._id);
+       
         const user = await Usuario.findById(req.usuario._id);
-        console.log(user);
+       // console.log(user);
         if (!user) {
             return res.status(404).json({ message: 'Usuario no encontrado' });
         }
-        console.log("aca si");
+       // console.log("aca si");
         const notificacionesNoLeidas = user.notificacionesUsuario.filter(notificacionesUsuario => !notificacionesUsuario.read);
        
-        console.log("notificaciones no leidas" + notificacionesNoLeidas);
+        //console.log("notificaciones no leidas" + notificacionesNoLeidas);
         
         res.json(notificacionesNoLeidas);
     } catch (error) {

@@ -146,6 +146,68 @@ ruta.put('/',async (req, res) => {
      
 });
 
+
+
+
+ruta.put('/eliminar/', async (req, res) => {
+  console.log("llega al eliminar");
+  try {
+    console.log("llega al eliminar con", req.body);
+
+    const { usuarioId, turnoId } = req.body; 
+    
+    // Verifica el contenido de las variables `usuarioId` y `turnoId`
+    console.log("usuarioId:", usuarioId);
+    console.log("turnoId:", turnoId);
+    let resultado = eliminarTurnoPorUsuario(usuarioId, turnoId);
+    const admin = await Usuario.findOne({ administrador: true });
+    const usuarioAgendado = await Usuario.findOne({ _id: usuarioId });
+    const agenda = await Agenda.findOne({ _id: turnoId });
+    const message = "Un usuario canceló su entrevista: " + usuarioAgendado.nombre;
+    const newNotification = {
+      message,
+      read: false,
+      timestamp: Date.now()
+    };
+    
+    await admin.updateOne({ $push: { notificacionesUsuario: newNotification } });
+
+    resultado.then(valor => {
+      res.json({ valor });
+    }).catch(err => {
+      res.status(400).json({ error: 'Error al actualizar turno' });
+    });
+  } catch (err) {
+    res.status(400).json({ error: 'Datos inválidos' });
+  }
+});
+
+async function eliminarTurnoPorUsuario(id_usuario, id_turno) {
+  console.log("llega a funcion eliminar");
+  try {
+    let usuario = await Usuario.findById(id_usuario);
+    console.log("usuario encontrado" + usuario);
+    let agenda = await Agenda.findById(id_turno);
+    console.log("agenda encontrado" + agenda);
+    if (!usuario) {
+      console.log("usuario NO encontrado" + id_usuario);
+      throw new Error('Usuario no encontrado');
+    } else if (!agenda) {
+      throw new Error('Turno no encontrado');
+    }
+
+    agenda.usuario = null;
+    agenda.observacion = '';
+    agenda.presencial = false; 
+
+    await agenda.save();
+    return agenda;
+  } catch (err) {
+    throw new Error('Error al eliminar turno: ' + err.message);
+  }
+}
+
+
 async function agendarUsuario(id_usuario, id_turno){
   console.log("llega a funcion agendar");
   try {
@@ -200,9 +262,10 @@ ruta.get('/agendaAlumno', async (req, res) => {
     }
     let turno = await turnoParaUsuario(usuario);
     
-    if(!turno) {
-      res.json(null);
-    }else{
+    if (!turno) {
+      return res.status(204).send(); // No Content
+    }
+    else{
       console.log(turno);
       res.json(turno);
     }
@@ -213,23 +276,25 @@ ruta.get('/agendaAlumno', async (req, res) => {
   }
 });
 
-async function turnoParaUsuario(usuarioId) {
+async function turnoParaUsuario(usuario) {
+  console.log("usuario que llega" + usuario);
   try {
-    let usuario = await Usuario.findById(usuarioId);
-    if (!usuario) {
-      console.log("Usuario NO encontrado " + usuarioId);
+    
+    let user = await Usuario.findById(usuario);
+    if (!user) {
+      console.log("Usuario NO encontrado " + usuario);
       throw new Error('Usuario no encontrado');
     }
 
     const hoy = new Date();
-    
+    console.log("usuario agenda" + usuario);
     // Buscar turnos a partir de hoy en adelante
     const turno = await Agenda.findOne({
-      usuario: usuario._id,
+      usuario: usuario,
       fecha: { $gte: hoy } // Filtrar turnos con fecha mayor o igual a hoy
     })
     .populate('usuario');
-    
+    console.log("turno del usuario" + turno);
     return turno;
   } 
   catch (error) {

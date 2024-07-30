@@ -231,7 +231,6 @@ ruta.put('/editarUsuario/:id', (req, res) => {
 
  ruta.put('/editar/:id', (req, res) => {
 
-    console.log("llega al editar");
       try{
        let resultado = editarUsuarioNoAdmin (req.params.id, req.body);
        resultado.then(valor => {
