@@ -177,7 +177,7 @@ ruta.post('/',autentificarToken, async (req, res) => {
 });
 
 // PUT: Actualizar una rutina_ejercicio_alumno por ID
-ruta.put('/:id',autentificarToken, async (req, res) => {
+ruta.put('/:id',autentificarTokenNotAdmin, async (req, res) => {
   const { id } = req.params;
   const body = req.body;
   const { error, value } = updateSchema.validate({
@@ -198,13 +198,57 @@ ruta.put('/:id',autentificarToken, async (req, res) => {
   }
 
   try {
+
     const updatedRutinaEjercicioAlumno = await RutinaEjercicioAlumno.findByIdAndUpdate(id, value, { new: true });
 
     if (!updatedRutinaEjercicioAlumno) {
       return res.status(404).json({ error: 'El ejercicio del alumno no fue encontrado' });
     }
+   
+    // Notificación
+    console.log("GENERANDO NOTIFICACION!");
+    const userId = req.headers['user-id'];
+    const rutina = await RutinaEjercicioAlumno.findById(id);
+    const usuarioRutina = await Usuario.findById(rutina.usuario);
+    const usuarioAdmin = await Usuario.findOne({ administrador: true });
+    console.log("USER ID" + userId);
+    console.log("RUTINA" + rutina);
+    console.log("USUARIO DE RUTINA" + usuarioRutina);
+    console.log("USUARIO ADMIN" + usuarioAdmin);
+    let message;
+    let targetUser;
+    const fecha = rutina.fecha;
+
+    // Obtener el día, mes y año
+    const dia = fecha.getDate().toString().padStart(2, '0');
+    const mes = (fecha.getMonth() + 1).toString().padStart(2, '0'); // Los meses van de 0 a 11
+    const anio = fecha.getFullYear();
+
+    // Formatear la fecha
+    const fechaFormateada = `${dia}/${mes}/${anio}`;
+    if (userId !== usuarioAdmin._id.toString()) {
+      // Mensaje para el administrador
+      message = `${usuarioRutina.nombre} ha dejado una nota en su rutina el ${fechaFormateada}!`;
+      targetUser = usuarioAdmin;
+    } else {
+      // Mensaje para el usuario de la rutina
+      message = `Tienes una nueva nota en tu rutina del ${fechaFormateada}!`;
+      targetUser = usuarioRutina;
+    }
+
+    const newNotification = {
+      message,
+      read: false,
+      timestamp: Date.now()
+    };
+
+    await targetUser.updateOne(
+      { $push: { notificacionesUsuario: newNotification } }
+    );
+
     res.status(200).json(updatedRutinaEjercicioAlumno);
   } catch (error) {
+    console.error('Error al actualizar el ejercicio del alumno:', error);
     res.status(400).json({ error: 'Error al actualizar el ejercicio del alumno' });
   }
 });
