@@ -159,6 +159,7 @@ ruta.post('/', async (req, res) => {
                 id: usuario._id,
                 email: usuario.email,
                 admin: usuario.administrador,
+                alumno: usuario.alumno,
                 mensaje : await generarMotivacion(usuario._id, fechaUltimaConexion),
             }
            

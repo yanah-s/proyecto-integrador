@@ -173,6 +173,18 @@ ruta.get('/',autentificarToken, async (req, res) => {
         res.status(400).json({ err });
     }
 });
+
+ruta.get('/alumnos',autentificarToken, async (req, res) => {
+    try {
+        
+        let usuarios = await listarUsuariosAlumnos();
+        res.json(usuarios);
+    } catch (err) {
+        res.status(400).json({ err });
+    }
+});
+
+
 ruta.post('/', async (req, res) => {
     try {
       const { error, value } = schema.validate(req.body, { abortEarly: false });
@@ -385,6 +397,16 @@ async function listarUsuariosActivos(){
     find(({estado: true, administrador: false}));
     return usuarios;
 }
+
+async function listarUsuariosAlumnos() {
+    let usuarios = await Usuario.find({
+        estado: true, 
+        administrador: false, 
+        alumno: true
+    });
+    return usuarios;
+}
+
 
 async function actualizarPassword(email, body){
     try {
