@@ -10,6 +10,7 @@ const rutina = require('./routes/rutinas');
 const notificaciones = require ('./routes/notificaciones');
 const rutina_ej_alumno = require('./routes/rutina_ej_alumno');
 const avances = require('./routes/avances');
+const path = require('path');
 
 const dbHost = 'localhost';
 const dbPort = '27017'; 
@@ -26,6 +27,7 @@ mongoose.connect(dbURL)
     .catch(err => console.error('Error al conectar a la base de datos:', err));
 
 const app = express();
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use(express.json());
 app.use(cors());
 app.use(express.urlencoded({extended:true}));

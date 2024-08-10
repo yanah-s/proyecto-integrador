@@ -6,6 +6,49 @@ const mongoose = require('mongoose');
 const autentificarToken = require ('../middleware/autToken');
 const autTokenNotAdmin = require('../middleware/autTokenNotAdmin')
 const emailjs = require('@emailjs/nodejs')
+const multer = require('multer');
+const path = require('path');
+const autentificarTokenNotAdmin = require('../middleware/autTokenNotAdmin');
+
+
+
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+      cb(null, 'uploads/');
+    },
+    filename: (req, file, cb) => {
+      cb(null, Date.now() + path.extname(file.originalname)); // Generar un nombre único para cada archivo
+    },
+  });
+  
+  const upload = multer({ storage });
+  ruta.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
+
+  
+  ruta.post('/upload', autTokenNotAdmin, upload.single('file'), async (req, res) => {
+    
+    try {
+      const userId = req.usuario._id;
+      const profileImage = req.file.path; 
+      console.log(userId);
+      console.log(profileImage);
+      // Actualizar la información del usuario en la base de datos
+      await Usuario.findByIdAndUpdate(userId, { profileImage });
+     
+      res.status(200).json({
+        message: 'imagen guardada',
+        file: req.file,
+      });
+    } catch (error) {
+      res.status(500).json({
+        message: 'Error uploading file',
+        error,
+      });
+    }
+  });
+  
+  
 
 ruta.post('/recuperar-passw', async (req, res) => {
     const destinatario = req.body.email;
@@ -57,78 +100,68 @@ function generarCodigoRecuperacion() {
 
     return  Math.random().toString(36).slice(2, 8).toUpperCase();  
 }
-
-// const validadEdad = (fechaIngresada) => {
-//     const actual = new Date();
-//     const fecha = new Date(fechaIngresada);
-//     const edad = actual.getFullYear() - fecha.getFullYear();
-//     const meses = actual.getMonth() - fecha.getMonth();
-
-//     // Ajusta la edad si el mes de nacimiento no ha ocurrido aún 
-//     if (meses < 0 || (meses === 0 && actual.getDate() < fecha.getDate())) {
-//         age--;
-//     }
-
-//     // Verifica si la edad está entre 16 y 50 años
-//     return age >= 16 && age <= 50;
-// };
-
 const schema = Joi.object({
     nombre: Joi.string()
-        .min(3)
-        .required()
-        .messages({
-            'string.min': 'El nombre debe tener al menos 3 caracteres.',
-            'any.required': 'El nombre es un campo obligatorio.'
-        }),
-
+      .min(3)
+      .required()
+      .messages({
+        'string.min': 'El nombre debe tener al menos 3 caracteres.',
+        'any.required': 'El nombre es un campo obligatorio.'
+      }),
+  
     password: Joi.string()
-        .pattern(/^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{5,}$/)
-        .required()
-        .messages({
-            'string.pattern.base': 'La contraseña debe tener al menos 5 caracteres, incluyendo al menos una letra y un número.',
-            'any.required': 'La contraseña es un campo obligatorio.'
-        }),
-        password2: Joi.ref('password'), 
-        fNacimiento: fechaNacimiento(),
+      .pattern(/^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{5,}$/)
+      .required()
+      .messages({
+        'string.pattern.base': 'La contraseña debe tener al menos 5 caracteres, incluyendo al menos una letra y un número.',
+        'any.required': 'La contraseña es un campo obligatorio.'
+      }),
+    
+    password2: Joi.ref('password'),
+  
+    fNacimiento: fechaNacimiento(),
+  
     email: Joi.string()
-        .email({ minDomainSegments: 2, tlds: { allow: ['com', 'net', '.com'] } })
-        .required()
-        .messages({
-            'string.email': 'El correo electrónico debe ser un correo válido.',
-            'any.required': 'El correo electrónico es un campo obligatorio.'
-        }),
-        patologias: Joi.string().allow('') ,
-
-
-        telefono: Joi.string()
-        .required()
-        .messages({
-            'any.required': 'El telefono es un campo obligatorio.'
-        })
-});
-
-//verifica edad de los usuairos
+      .email({ minDomainSegments: 2, tlds: { allow: ['com', 'net', 'org'] } })
+      .required()
+      .messages({
+        'string.email': 'El correo electrónico debe ser un correo válido.',
+        'any.required': 'El correo electrónico es un campo obligatorio.'
+      }),
+    
+    patologias: Joi.string().allow(''),
+  
+    telefono: Joi.string()
+      .pattern(/^09\d{7}$/)
+      .required()
+      .messages({
+        'string.pattern.base': 'El teléfono debe empezar con 09 y tener 9 dígitos en total.',
+        'any.required': 'El teléfono es un campo obligatorio.'
+      }),
+  });
+  
+  // Función para validar la fecha de nacimiento
   function fechaNacimiento() {
     const maxDate = new Date();
     maxDate.setFullYear(maxDate.getFullYear() - 16);
     const minDate = new Date();
     minDate.setFullYear(minDate.getFullYear() - 50);
-
+  
     return Joi.date()
       .max(maxDate.toISOString())
-      .iso()
       .min(minDate.toISOString())
+      .iso()
       .required()
       .messages({
         'date.base': 'La fecha de nacimiento debe ser una fecha válida.',
-        'date.format': 'El formato de la fecha de nacimiento es inválido.',
+        'date.isoDate': 'El formato de la fecha de nacimiento es inválido.',
         'date.max': 'Debes tener al menos 16 años de edad.',
         'date.min': 'No debes tener más de 50 años de edad.',
-        'any.required': 'La fecha de nacimiento es un campo obligatorio.', 
-         'any': 'Error en el campo de fecha de nacimiento.'
+        'any.required': 'La fecha de nacimiento es un campo obligatorio.'
       });
-  };
+  }
+  
+
 
 
 ruta.get('/',autentificarToken, async (req, res) => {
@@ -140,24 +173,24 @@ ruta.get('/',autentificarToken, async (req, res) => {
         res.status(400).json({ err });
     }
 });
-
 ruta.post('/', async (req, res) => {
     try {
       const { error, value } = schema.validate(req.body, { abortEarly: false });
       console.log(error);
       if (error) {
         const errorMessages = error.details.map(err => err.message);
+        console.log(errorMessages);
         return res.status(400).json({ errors: errorMessages });
       }
       const user = await crearUsuario(req.body);
-        res.json({ value: user });
-        console.log("este es el usuario creado recien"+ user._id);
+      res.json({ value: user });
+      console.log("Usuario creado:", user._id);
     } catch (err) {
       console.error(err);
       res.status(500).json({ message: 'Error interno' });
     }
   });
-
+  
 ruta.put('/:email',autentificarToken, (req, res) => {
    try{
     let resultado = actualizarPassword(req.params.email, req.body);
@@ -205,7 +238,7 @@ ruta.get('/:id', (req, res) => {
 }
 
 
-ruta.put('/editarUsuario/:id', (req, res) => {
+ruta.put('/editarUsuario/:id',autentificarToken, (req, res) => {
 
   console.log("llega al editar");
     try{
@@ -229,7 +262,7 @@ ruta.put('/editarUsuario/:id', (req, res) => {
        
  });
 
- ruta.put('/editar/:id', (req, res) => {
+ ruta.put('/editar/:id',autentificarTokenNotAdmin, (req, res) => {
 
       try{
        let resultado = editarUsuarioNoAdmin (req.params.id, req.body);
@@ -253,7 +286,7 @@ ruta.put('/editarUsuario/:id', (req, res) => {
    });
 
    async function editarUsuarioNoAdmin (id, body){
-    console.log(id);
+    console.log(body);
     try {
         let usuario = await Usuario.findOne({ "_id": id });
 
@@ -263,13 +296,14 @@ ruta.put('/editarUsuario/:id', (req, res) => {
         
         else {
             console.log("cambiando passw");
-            if(body.password != "" || body.password != usuario.password){
-                usuario.password =body.password;
-            }
-            if(body.telefono != "" || body.telefono != usuario.telefono){
-                usuario.telefono = body.telefono;
-            }
+           
+        if (body.password && body.password !== usuario.password) {
+            usuario.password = body.password;
+        }
 
+        if (body.telefono && body.telefono !== usuario.telefono) {
+            usuario.telefono = body.telefono;
+        }
             
             await usuario.save();
             console.log(usuario);
@@ -321,22 +355,26 @@ ruta.delete('/:id', autentificarToken , (req, res) => {
 });
 
 
-async function crearUsuario(body){
-    let usuario = new Usuario({
-        email       : body.email,
-        nombre      : body.nombre,
-        password    : body.password,
-        fNacimiento : body.fNacimiento,
-        estado : body.estado,
-        alumno : body.alumno,
-        administrador : body.administrador,
-        patologias : body.patologias,
-        telefono : body.telefono
-
-    });
-    return await usuario.save();
-}
-
+async function crearUsuario(body) {
+    try {
+      let usuario = new Usuario({
+        email: body.email,
+        nombre: body.nombre,
+        password: body.password,
+        fNacimiento: body.fNacimiento,
+        estado: body.estado,
+        alumno: body.alumno,
+        administrador: body.administrador,
+        patologias: body.patologias,
+        telefono: body.telefono
+      });
+      return await usuario.save();
+    } catch (error) {
+      console.error('Error al guardar el usuario:', error);
+      throw error; 
+    }
+  }
+  
 async function listarUsuarios(){
     let usuarios = await Usuario.find();
     return usuarios;
@@ -386,7 +424,8 @@ async function editarUsuario (id, body){
             console.log(usuario);
             if(body.patologias !== ""){
                 usuario.patologias =body.patologias;
-            }else if(body.observaciones !== "") {
+            }
+            if(body.observaciones !== "") {
                 usuario.observaciones = body.observaciones;
             } 
             

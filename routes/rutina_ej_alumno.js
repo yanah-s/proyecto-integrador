@@ -180,6 +180,7 @@ ruta.post('/',autentificarToken, async (req, res) => {
 ruta.put('/:id',autentificarTokenNotAdmin, async (req, res) => {
   const { id } = req.params;
   const body = req.body;
+  console.log(req.body);
   const { error, value } = updateSchema.validate({
     series: body.series,
     repeticiones: body.repeticiones,
@@ -205,6 +206,7 @@ ruta.put('/:id',autentificarTokenNotAdmin, async (req, res) => {
       return res.status(404).json({ error: 'El ejercicio del alumno no fue encontrado' });
     }
    
+    
     // Notificación
     console.log("GENERANDO NOTIFICACION!");
     const userId = req.headers['user-id'];

@@ -45,6 +45,7 @@ ruta.post('/', autentificarToken, async (req, res) => {
         
         // Eliminar el token del usuario
         usuario.token = "";
+        usuario.mensajeMotivacion = "";
         await usuario.save();
         console.log("es el user despus del logout" + usuario);
         res.sendStatus(204);

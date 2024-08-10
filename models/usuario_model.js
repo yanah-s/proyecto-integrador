@@ -19,6 +19,15 @@ const usuarioSchema = new mongoose.Schema({
         type:Date,
         required: true
     },
+    ultimaConexion: {
+        type:Date,
+        required: false
+    },
+    mensajeMotivacion : {
+        type :String,
+        required: false,
+        default: "",
+    },
     estado: {
         type: Boolean,
         default: true
@@ -53,6 +62,11 @@ const usuarioSchema = new mongoose.Schema({
          default:"",
          required: true
     },
+    profileImage: {
+        type: String,
+        default: '',
+        required: false
+      },
     notificacionesUsuario: [
         {
             message: { type: String },
