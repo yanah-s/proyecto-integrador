@@ -11,6 +11,8 @@ const notificaciones = require ('./routes/notificaciones');
 const rutina_ej_alumno = require('./routes/rutina_ej_alumno');
 const avances = require('./routes/avances');
 const path = require('path');
+const objetivo_meta = require('./routes/objetivo_meta');
+const objetivo_meta_usuario = require('./routes/objetivo_meta_usuario');
 
 const dbHost = 'localhost';
 const dbPort = '27017'; 
@@ -42,6 +44,9 @@ app.use('/api/autentificacion' ,autentificacion);
 app.use('/api/logout',logout);
 app.use('/api/rutina_ej_alumno', rutina_ej_alumno);
 app.use('/api/avances', avances);
+app.use('/api/objetivo_meta', objetivo_meta);
+app.use('/api/objetivo_meta_usuario', objetivo_meta_usuario);
+
 const port = process.env.PORT || 3000;
 app.listen(port, () => {
     console.log(`Api RESTFul Ok, y ejecutándose en el puerto ${port}...`);

@@ -1,6 +1,5 @@
 const mongoose = require('mongoose');
 const Joi = require('@hapi/joi');
-//const Usuario = require('./usuario_model');
 
 const motivacionalSchema = new mongoose.Schema({
     titulo: {
