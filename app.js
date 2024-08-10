@@ -9,6 +9,8 @@ const agendas = require('./routes/agendas');
 const ejercicio = require('./routes/ejercicio');
 const rutina = require('./routes/rutinas');
 const rutina_ej_alumno = require('./routes/rutina_ej_alumno');
+const objetivo_meta = require('./routes/objetivo_meta');
+const objetivo_meta_usuario = require('./routes/objetivo_meta_usuario');
 
 const dbHost = '127.0.0.1';
 //'3.16.90.77'; 
@@ -38,6 +40,8 @@ app.use('/api/rutinas', rutina);
 app.use('/api/autentificacion' ,autentificacion);
 app.use('/api/logout',logout);
 app.use('/api/rutina_ej_alumno', rutina_ej_alumno);
+app.use('/api/objetivo_meta', objetivo_meta);
+app.use('/api/objetivo_meta_usuario', objetivo_meta_usuario);
 
 const port = process.env.PORT || 3000;
 app.listen(port, () => {
