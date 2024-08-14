@@ -55,10 +55,12 @@ const schema = Joi.object({
     }),
   valor: Joi.number()
     .integer()
+    .min(0)
     .allow('')
     .messages({
       'number.base': 'El valor debe ser un número.',
       'number.integer': 'El valor debe ser un número entero.',
+      'number.min': 'El valor no puede ser un número negativo.',
     }),
   creadoAdmin: Joi.boolean()
     .default(false)
@@ -113,10 +115,11 @@ ruta.post('/', async (req, res) => {
     });
     
     if (error) {
-        const detailedErrors = error.details.map(detail => ({
-            message: detail.message,
-            path: detail.path
-        }));
+      const detailedErrors = error.details.map(detail => ({
+        message: detail.message,
+        path: detail.path
+      }));
+      console.log(detailedErrors);
         return res.status(400).json({ error: detailedErrors });
     }
 
