@@ -105,9 +105,14 @@ ruta.post('/', autentificarToken ,async (req, res) => {
 ruta.put('/',async (req, res) => {
  
   try{
-    const { usuarioId, turnoId } = req.body; 
-    // const user = Usuario.findById({usuarioId});
-   let resultado = agendarUsuario(usuarioId, turnoId);
+    // console.log("LLEGA EL REQ/BODY AGENDA" + req.body);
+    // const { usuarioId, turnoId } = req.body; 
+    const { usuarioId, turnoId, observaciones, presencial } = req.body;
+
+    // Asegúrate de que la función `agendarUsuario` acepte los nuevos campos
+    let resultado = agendarUsuario(usuarioId, turnoId, observaciones, presencial);
+
+  //  let resultado = agendarUsuario(usuarioId, turnoId);
    console.log(resultado);
    const admin = await Usuario.findOne({ administrador: true });
     const usuarioAgendado = await Usuario.findOne({_id : usuarioId});
@@ -208,7 +213,7 @@ async function eliminarTurnoPorUsuario(id_usuario, id_turno) {
 }
 
 
-async function agendarUsuario(id_usuario, id_turno){
+async function agendarUsuario(id_usuario, id_turno, observaciones, presencial){
   console.log("llega a funcion agendar");
   try {
       let usuario = await Usuario.findById(id_usuario);
@@ -224,6 +229,8 @@ async function agendarUsuario(id_usuario, id_turno){
       }
 
       agenda.usuario = usuario;
+      agenda.observacion = observaciones;
+      agenda.presencial = presencial;    
 
       await agenda.save();
 

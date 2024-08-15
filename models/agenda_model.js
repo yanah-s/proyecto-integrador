@@ -22,11 +22,12 @@ const agendaSchema = new mongoose.Schema({
         default : null
       },
       observacion:{
-        type: String
+        type: String,
+        default : ""
       },
       presencial : {
         type: Boolean,
-        defauls : false
+        default : false
       }
 });
 

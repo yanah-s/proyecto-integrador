@@ -329,8 +329,10 @@ ruta.put('/editarUsuario/:id',autentificarToken, (req, res) => {
  
 
  ruta.put('/asignar/:id',autentificarToken, (req, res) => {
+    console.log("se asigna usuario");
     try{
      let resultado = activarAlumno (req.params.id, req.body);
+     console.log(resultado);
      resultado.then(valor => {
          res.json({
              valor
@@ -475,11 +477,13 @@ async function desactivarUsuario(id){
 
 
 async function activarAlumno (id){
+    console.log("id de activar alumno" + id);
     let usuario = await Usuario.findOneAndUpdate({"_id": id}, {
         $set: {
             alumno: true
         }
     }, {new: true});
+    console.log("usuario a devolver" + usuario);
     return usuario;
 }
 
