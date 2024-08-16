@@ -32,10 +32,10 @@ const schema = Joi.object({
     .max(50)
     .required()
     .messages({
-        'string.empty': 'El músculo ppal no puede estar vacío.',
-        'string.min': 'El músculo ppal debe tener al menos {#limit} caracteres.',
-        'string.max': 'El músculo ppal debe tener como máximo {#limit} caracteres.',
-        'any.required': 'El músculo ppal es obligatorio.'
+        'string.empty': 'El músculo principal no puede estar vacío.',
+        'string.min': 'El músculo principal debe tener al menos {#limit} caracteres.',
+        'string.max': 'El músculo principal debe tener como máximo {#limit} caracteres.',
+        'any.required': 'El músculo principal es obligatorio.'
     }),
 
     otrosMusculos: Joi.array()
@@ -52,7 +52,10 @@ const schema = Joi.object({
 
     video: Joi.string()
     .uri()
-    .allow(''),
+    .allow('')
+    .messages({
+        'string.uri': 'La URL del video no es válida. Por favor, ingrese una URL correcta.',
+    }),
 
     disponible: Joi.boolean()
     .default(true)
@@ -75,10 +78,10 @@ const updateSchema = Joi.object({
     .max(50)
     .required()
     .messages({
-        'string.empty': 'El músculo ppal no puede estar vacío.',
-        'string.min': 'EL músculo ppal debe tener al menos {#limit} caracteres.',
-        'string.max': 'EL músculo ppal debe tener como máximo {#limit} caracteres.',
-        'any.required': 'EL músculo ppal es obligatorio.'
+        'string.empty': 'El músculo principal no puede estar vacío.',
+        'string.min': 'EL músculo principal debe tener al menos {#limit} caracteres.',
+        'string.max': 'EL músculo principal debe tener como máximo {#limit} caracteres.',
+        'any.required': 'EL músculo principal es obligatorio.'
     }),
     
     otrosMusculos: Joi.array()
@@ -95,7 +98,10 @@ const updateSchema = Joi.object({
     
     video: Joi.string()
     .uri()
-    .allow(''),
+    .allow('')
+    .messages({
+        'string.uri': 'La URL del video no es válida. Por favor, ingrese una URL correcta.',
+    }),
     
     disponible: Joi.boolean()
     .default(true)
@@ -170,7 +176,7 @@ ruta.put('/:id', autentificarToken , async (req, res) => {
             path: detail.path
         }));
         console.log(detailedErrors);
-        res.status(400).json({ error: detailedErrors });
+        return res.status(400).json({ error: detailedErrors });
     }
 
     try {

@@ -18,10 +18,12 @@ const updateSchema = Joi.object({
     }),
     valor: Joi.number()
         .integer()
+        .min(0)
         .allow('')
         .messages({
           'number.base': 'El valor debe ser un número.',
           'number.integer': 'El valor debe ser un número entero.',
+          'number.min': 'El valor no puede ser un número negativo.',
     }),
     cumplido: Joi.boolean()
         .default(false)
@@ -133,6 +135,7 @@ ruta.post('/', async (req, res) => {
 ruta.put('/:id', async (req, res) => {
   const { id } = req.params;
   const body = req.body;
+  console.log(body.valor);
   const { error, value } = updateSchema.validate({
     fechaDesde: body.fechaDesde,
     fechaHasta: body.fechaHasta,
@@ -146,7 +149,7 @@ ruta.put('/:id', async (req, res) => {
           path: detail.path
       }));
       console.log(detailedErrors);
-      res.status(400).json({ error: detailedErrors });
+      return res.status(400).json({ error: detailedErrors });
   }
 
   try {

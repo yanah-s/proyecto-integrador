@@ -176,7 +176,7 @@ ruta.put('/:id', async (req, res) => {
           path: detail.path
       }));
       console.log(detailedErrors);
-      res.status(400).json({ error: detailedErrors });
+      return res.status(400).json({ error: detailedErrors });
   }
 
   try {
