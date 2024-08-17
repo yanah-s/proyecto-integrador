@@ -4,6 +4,7 @@ const Joi = require('@hapi/joi');
 const ObjetivoMetaUsuario = require('../models/objetivo_meta_usuario_model');
 const autentificarToken = require ('../middleware/autToken');
 const autentificarTokenNotAdmin = require('../middleware/autTokenNotAdmin');
+const Usuario = require('../models/usuario_model');
 
 const updateSchema = Joi.object({
     fechaDesde: Joi.date()
@@ -128,6 +129,20 @@ ruta.post('/',autentificarTokenNotAdmin, async (req, res) => {
     }
 
     const objetivo_meta_usuario = await crearObjetivo_meta_usuario(value);
+    
+
+    const user = await Usuario.findById(usuario);
+     const message = "Tienes nuevos objetivos!";
+    const newNotification = {
+        message,
+        read: false,
+        timestamp: Date.now()
+    };
+    await user.updateOne(
+        { $push: { notificacionesUsuario: newNotification } }
+    );
+
+
     res.json({ valor: objetivo_meta_usuario });
   } catch (err) {
     res.status(400).json({ err: err.message });
